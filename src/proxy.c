@@ -68,6 +68,8 @@
 #include <haproxy/tools.h>
 #include <haproxy/uri_auth.h>
 
+/* Lock to ensure multiple backends deletion concurrently is safe */
+static __decl_spinlock(delete_lock);
 
 int listeners;	/* # of proxy listeners, set by cfgparse */
 struct proxy *proxies_list  = NULL;     /* list of main proxies */
@@ -229,10 +231,15 @@ static inline void proxy_free_common(struct proxy *px)
 	struct logger *log, *logb;
 	struct lf_expr *lf, *lfb;
 
+	/* First release from global elements under lock protection. */
+	HA_SPIN_LOCK(OTHER_LOCK, &delete_lock);
 	/* note that the node's key points to p->id */
 	cebis_item_delete((px->cap & PR_CAP_DEF) ? &defproxy_by_name : &proxy_by_name, conf.name_node, id, px);
-	ha_free(&px->id);
 	LIST_DEL_INIT(&px->global_list);
+	HA_SPIN_UNLOCK(OTHER_LOCK, &delete_lock);
+
+	/* Now release internal proxy elements. */
+	ha_free(&px->id);
 	drop_file_name(&px->conf.file);
 	counters_fe_shared_drop(&px->fe_counters.shared);
 	counters_be_shared_drop(&px->be_counters.shared);
@@ -5069,7 +5076,8 @@ int be_check_for_deletion(const char *bename, struct proxy **pb, const char **pm
 /* Handler for "delete backend". Runs under thread isolation. Always returns 1. */
 static int cli_parse_delete_backend(char **args, char *payload, struct appctx *appctx, void *private)
 {
-	struct proxy *px;
+	struct watcher *px_watch;
+	struct proxy *px, *prev;
 	const char *msg;
 	char *be_name;
 	int ret;
@@ -5091,11 +5099,32 @@ static int cli_parse_delete_backend(char **args, char *payload, struct appctx *a
 		goto out;
 	}
 
+	while (!MT_LIST_ISEMPTY(&px->watcher_list)) {
+		px_watch = MT_LIST_NEXT(&px->watcher_list, struct watcher *, el);
+		watcher_next(px_watch, px->next);
+	}
+
+	ceb32_item_delete(&used_proxy_id, conf.uuid_node, uuid, px);
+	cebis_item_delete(&proxy_by_name, conf.name_node, id, px);
+
+	/* Detach backend from global proxies_list. */
+	if (proxies_list == px) {
+		proxies_list = px->next;
+	}
+	else {
+		for (prev = proxies_list->next; prev && prev->next != px; prev = prev->next)
+			;
+		BUG_ON(!prev); /* Proxy instance not found in global list ? */
+		prev->next = px->next;
+	}
+
 	px->flags |= PR_FL_DELETED;
 
 	thread_release();
 
 	ha_notice("Backend deleted.\n");
+	proxy_drop(px);
+
 	cli_umsg(appctx, LOG_INFO);
 	return 1;
 
