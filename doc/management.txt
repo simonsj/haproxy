@@ -2124,6 +2124,16 @@ del acl <acl> [<key>|#<ref>]
   listing the content of the acl. Note that if the reference <acl> is a name and
   is shared with a map, the entry will be also deleted in the map.
 
+del backend <name>
+  Removes the backend proxy with the name <name>.
+
+  This operation is only possible for TCP or HTTP proxies. To succeed, the
+  backend instance must have been first unpublished.
+
+  This command is restricted and can only be issued on sockets configured for
+  level "admin". Moreover, this feature is still considered in development so it
+  also requires experimental mode (see "experimental-mode on").
+
 del map <map> [<key>|#<ref>]
   Delete all the map entries from the map <map> corresponding to the key <key>.
   <map> is the #<id> or the <name> returned by "show map". If the <ref> is used,

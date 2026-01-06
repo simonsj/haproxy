@@ -101,6 +101,8 @@ void free_server_rules(struct list *srules);
 int proxy_init_per_thr(struct proxy *px);
 int proxy_finalize(struct proxy *px, int *err_code);
 
+int be_check_for_deletion(const char *bename, struct proxy **pb, const char **pm);
+
 /*
  * This function returns a string containing the type of the proxy in a format
  * suitable for error messages, from its capabilities.

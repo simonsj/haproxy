@@ -4970,6 +4970,99 @@ static int cli_parse_add_backend(char **args, char *payload, struct appctx *appc
 	return 1;
 }
 
+/* Test if the backend instance named <bename> can be deleted.
+ *
+ * Returns a positive integer if backend can be deleted. Else, 0 is returned if
+ * backend should be deletable after some delay. A negative value indicates
+ * that backend cannot be deleted without any external action.
+ *
+ * If <pb> is not NULL, it will be set to point to the backend instance if name
+ * is found. If <pm> is not NULL, it will be used on error to point to the
+ * description failure.
+ */
+int be_check_for_deletion(const char *bename, struct proxy **pb, const char **pm)
+{
+	struct proxy *be = NULL;
+	const char *msg = NULL;
+	int ret;
+
+	/* First, unrecoverable errors */
+	ret = -1;
+
+	if (!(be = proxy_be_by_name(bename))) {
+		msg = "No such backend.";
+		goto out;
+	}
+
+	if (be->cap & PR_CAP_FE) {
+		msg = "Cannot delete a listen section.";
+		goto out;
+	}
+
+	if (be->mode != PR_MODE_TCP && be->mode != PR_MODE_HTTP) {
+		msg = "Only TCP or HTTP proxies can be removed at runtime.";
+		goto out;
+	}
+
+	if (!(be->flags & PR_FL_BE_UNPUBLISHED)) {
+		msg = "Backend must be unpublished prior to its deletion.";
+		goto out;
+	}
+
+	/* Second, conditions that may change over time */
+	ret = 0;
+
+	if (be->beconn) {
+		msg = "Backend still has attached streams on it.";
+		goto out;
+	}
+
+	ret = 1;
+
+ out:
+	if (pb)
+		*pb = be;
+	if (pm)
+		*pm = msg;
+	return ret;
+}
+
+/* Handler for "delete backend". Runs under thread isolation. Always returns 1. */
+static int cli_parse_delete_backend(char **args, char *payload, struct appctx *appctx, void *private)
+{
+	struct proxy *px;
+	const char *msg;
+	char *be_name;
+	int ret;
+
+	if (!cli_has_level(appctx, ACCESS_LVL_ADMIN))
+		return 1;
+
+	if (*args[3]) {
+		cli_err(appctx, "Usage: del backend <name>.\n");
+		return 1;
+	}
+
+	thread_isolate_full();
+
+	be_name = args[2];
+	ret = be_check_for_deletion(be_name, &px, &msg);
+	if (ret <= 0) {
+		cli_err(appctx, msg);
+		goto out;
+	}
+
+	thread_release();
+
+	ha_notice("Backend deleted.\n");
+	cli_umsg(appctx, LOG_INFO);
+	return 1;
+
+ out:
+	thread_release();
+	return 1;
+}
+
 /* Parses the "disable frontend" directive, it always returns 1.
  *
  * Grabs the proxy lock.
@@ -5292,6 +5385,7 @@ static int cli_io_handler_show_errors(struct appctx *appctx)
 /* register cli keywords */
 static struct cli_kw_list cli_kws = {{ },{
 	{ { "add", "backend", NULL },                       "add backend <backend>                   : add a new backend",                                              cli_parse_add_backend, NULL, NULL, NULL, ACCESS_EXPERIMENTAL },
+	{ { "del", "backend", NULL },                       "del backend <backend>                   : delete a backend",                                               cli_parse_delete_backend, NULL, NULL, NULL, ACCESS_EXPERIMENTAL },
 	{ { "disable", "frontend",  NULL },                 "disable frontend <frontend>             : temporarily disable specific frontend",                          cli_parse_disable_frontend, NULL, NULL },
 	{ { "enable", "frontend",  NULL },                  "enable frontend <frontend>              : re-enable specific frontend",                                    cli_parse_enable_frontend, NULL, NULL },
 	{ { "publish", "backend",  NULL },                  "publish backend <backend>               : mark backend as ready for traffic",                              cli_parse_publish_backend, NULL, NULL },
