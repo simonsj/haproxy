@@ -1978,6 +1978,8 @@ int proxy_finalize(struct proxy *px, int *err_code)
 				 */
 				px->options |= PR_O_HTTP_UPG;
 			}
+
+			target->flags |= PR_FL_NON_PURGEABLE;
 		}
 	}
 
@@ -2054,6 +2056,8 @@ int proxy_finalize(struct proxy *px, int *err_code)
 				 */
 				px->options |= PR_O_HTTP_UPG;
 			}
+
+			target->flags |= PR_FL_NON_PURGEABLE;
 		}
 		*err_code |= warnif_tcp_http_cond(px, rule->cond);
 	}
@@ -5009,6 +5013,11 @@ int be_check_for_deletion(const char *bename, struct proxy **pb, const char **pm
 		goto out;
 	}
 
+	if (be->cap & PR_CAP_FE) {
+		msg = "Cannot delete a listen section.";
+		goto out;
+	}
+
 	if (be->options & (PR_O_DISPATCH|PR_O_TRANSP)) {
 		msg = "Deletion of backend with deprecated dispatch/transparent options is not supported.";
 		goto out;
@@ -5019,8 +5028,8 @@ int be_check_for_deletion(const char *bename, struct proxy **pb, const char **pm
 		goto out;
 	}
 
-	if (be->cap & PR_CAP_FE) {
-		msg = "Cannot delete a listen section.";
+	if (be->flags & PR_FL_NON_PURGEABLE) {
+		msg = "This proxy cannot be removed at runtime due to other configuration elements pointing to it.";
 		goto out;
 	}
 
