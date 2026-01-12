@@ -239,14 +239,14 @@ enum PR_SRV_STATE_FILE {
 #define PR_RE_JUNK_REQUEST        0x00020000 /* We received an incomplete or garbage response */
 
 /* Proxy flags */
-#define PR_FL_DISABLED           0x01  /* The proxy was disabled in the configuration (not at runtime) */
-#define PR_FL_STOPPED            0x02  /* The proxy was stopped */
-#define PR_FL_DEF_EXPLICIT_MODE  0x04  /* Proxy mode is explicitely defined - only used for defaults instance */
-#define PR_FL_EXPLICIT_REF       0x08  /* The default proxy is explicitly referenced by another proxy */
-#define PR_FL_IMPLICIT_REF       0x10  /* The default proxy is implicitly referenced by another proxy */
-#define PR_FL_PAUSED             0x20  /* The proxy was paused at run time (reversible) */
-#define PR_FL_CHECKED            0x40  /* The proxy configuration was fully checked (including postparsing checks) */
-#define PR_FL_BE_UNPUBLISHED     0x80  /* The proxy cannot be targetted by content switching rules */
+#define PR_FL_DISABLED           0x00000001  /* The proxy was disabled in the configuration (not at runtime) */
+#define PR_FL_STOPPED            0x00000002  /* The proxy was stopped */
+#define PR_FL_DEF_EXPLICIT_MODE  0x00000004  /* Proxy mode is explicitely defined - only used for defaults instance */
+#define PR_FL_EXPLICIT_REF       0x00000008  /* The default proxy is explicitly referenced by another proxy */
+#define PR_FL_IMPLICIT_REF       0x00000010  /* The default proxy is implicitly referenced by another proxy */
+#define PR_FL_PAUSED             0x00000020  /* The proxy was paused at run time (reversible) */
+#define PR_FL_CHECKED            0x00000040  /* The proxy configuration was fully checked (including postparsing checks) */
+#define PR_FL_BE_UNPUBLISHED     0x00000080  /* The proxy cannot be targetted by content switching rules */
 
 struct stream;
 
@@ -311,9 +311,10 @@ struct proxy_per_tgroup {
 
 struct proxy {
 	enum obj_type obj_type;                 /* object type == OBJ_TYPE_PROXY */
-	char flags;                             /* bit field PR_FL_* */
 	enum pr_mode mode;                      /* mode = PR_MODE_TCP, PR_MODE_HTTP, ... */
 	char cap;                               /* supported capabilities (PR_CAP_*) */
+	/* 1 byte hole */
+	unsigned int flags;                     /* bit field PR_FL_* */
 	int to_log;				/* things to be logged (LW_*), special value LW_LOGSTEPS == follow log-steps */
 	unsigned long last_change;              /* internal use only: last time the proxy state was changed */
 
