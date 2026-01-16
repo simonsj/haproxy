@@ -956,6 +956,7 @@ endif # obsolete targets
 endif # TARGET
 
 OBJS =
+HTTPTERM_OBJS =
 
 ifneq ($(EXTRA_OBJS),)
   OBJS += $(EXTRA_OBJS)
@@ -1008,6 +1009,8 @@ ifneq ($(TRACE),)
   OBJS += src/calltrace.o
 endif
 
+HTTPTERM_OBJS += $(OBJS) src/httpterm.o
+
 # Used only for forced dependency checking. May be cleared during development.
 INCLUDES = $(wildcard include/*/*.h)
 DEP = $(INCLUDES) .build_opts
@@ -1053,6 +1056,9 @@ else
 endif # non-empty target
 
 haproxy: $(OPTIONS_OBJS) $(OBJS)
+	$(cmd_LD) $(ARCH_FLAGS) $(LDFLAGS) -o $@ $^ $(LDOPTS)
+
+httpterm: $(OPTIONS_OBJS) $(HTTPTERM_OBJS)
 	$(cmd_LD) $(ARCH_FLAGS) $(LDFLAGS) -o $@ $^ $(LDOPTS)
 
 objsize: haproxy
