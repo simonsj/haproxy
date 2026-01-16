@@ -897,7 +897,7 @@ static struct stconn *h1s_new_sc(struct h1s *h1s, struct buffer *input)
 	if (h1s->req.flags & H1_MF_UPG_WEBSOCKET)
 		se_fl_set(h1s->sd, SE_FL_WEBSOCKET);
 
-	if (!sc_new_from_endp(h1s->sd, h1c->conn->owner, input)) {
+	if (!sc_new_from_httpterm(h1s->sd, h1c->conn->owner, input)) {
 		TRACE_ERROR("SC allocation failure", H1_EV_STRM_NEW|H1_EV_STRM_END|H1_EV_STRM_ERR, h1c->conn, h1s);
 		goto err;
 	}

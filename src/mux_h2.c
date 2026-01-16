@@ -2120,7 +2120,7 @@ static struct h2s *h2c_frt_stream_new(struct h2c *h2c, int id, struct buffer *in
 	 */
 	sess->t_idle = ns_to_ms(now_ns - sess->accept_ts) - sess->t_handshake;
 
-	if (!sc_new_from_endp(h2s->sd, sess, input))
+	if (!sc_new_from_httpterm(h2s->sd, sess, input))
 		goto out_close;
 
 	h2c->nb_sc++;

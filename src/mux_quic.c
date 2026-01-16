@@ -640,6 +640,7 @@ static void qmux_ctrl_send(struct qc_stream_desc *stream, uint64_t data, uint64_
 		/* Remove stream from send_list if all was sent. */
 		LIST_DEL_INIT(&qcs->el_send);
 		TRACE_STATE("stream sent done", QMUX_EV_QCS_SEND, qcc->conn, qcs);
+		qcs_notify_send(qcs);
 
 		if (qcs->flags & (QC_SF_FIN_STREAM|QC_SF_DETACH)) {
 			/* Close stream locally. */
@@ -948,7 +949,7 @@ int qcs_attach_sc(struct qcs *qcs, struct buffer *buf, char fin)
 	if (!(global.tune.no_zero_copy_fwd & NO_ZERO_COPY_FWD_QUIC_SND))
 		se_fl_set(qcs->sd, SE_FL_MAY_FASTFWD_CONS);
 
-	if (!sc_new_from_endp(qcs->sd, sess, buf)) {
+	if (!sc_new_from_httpterm(qcs->sd, sess, buf)) {
 		TRACE_DEVEL("leaving on error", QMUX_EV_STRM_RECV, qcc->conn, qcs);
 		return -1;
 	}
