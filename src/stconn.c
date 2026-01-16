@@ -16,6 +16,7 @@
 #include <haproxy/connection.h>
 #include <haproxy/check.h>
 #include <haproxy/filters.h>
+#include <haproxy/hstream.h>
 #include <haproxy/http_ana.h>
 #include <haproxy/pipe.h>
 #include <haproxy/pool.h>
@@ -89,6 +90,15 @@ struct sc_app_ops sc_app_check_ops = {
 	.shutdown= NULL,
 	.wake    = wake_srv_chk,
 	.name    = "CHCK",
+};
+
+struct sc_app_ops sc_app_hstream_ops = {
+	.chk_rcv = NULL,
+	.chk_snd = NULL,
+	.abort   = NULL,
+	.shutdown= NULL,
+	.wake    = hstream_wake,
+	.name    = "HTTPTERM",
 };
 
 /* Initializes an endpoint */
@@ -258,6 +268,26 @@ struct stconn *sc_new_from_endp(struct sedesc *sd, struct session *sess, struct 
 	return sc;
 }
 
+struct stconn *sc_new_from_httpterm(struct sedesc *sd, struct session *sess, struct buffer *input)
+{
+	struct stconn *sc;
+
+	sc = sc_new(sd);
+	if (unlikely(!sc))
+		return NULL;
+	if (unlikely(!hstream_new(sess, sc, input))) {
+		sd->sc = NULL;
+		if (sc->sedesc != sd) {
+			/* none was provided so sc_new() allocated one */
+			sedesc_free(sc->sedesc);
+		}
+		pool_free(pool_head_connstream, sc);
+		se_fl_set(sd, SE_FL_ORPHAN);
+		return NULL;
+	}
+	se_fl_clr(sd, SE_FL_ORPHAN);
+	return sc;
+}
 /* Creates a new stream connector from an stream. There is no endpoint here, thus it
  * will be created by sc_new(). So the SE_FL_DETACHED flag is set. It returns
  * NULL on error. On success, the new stream connector is returned.
@@ -412,6 +442,25 @@ int sc_attach_strm(struct stconn *sc, struct stream *strm)
 	else {
 		sc->app_ops = &sc_app_embedded_ops;
 	}
+	return 0;
+}
+
+int sc_attach_hstream(struct stconn *sc, struct hstream *hs)
+{
+	BUG_ON(!sc_ep_test(sc, SE_FL_T_MUX));
+
+	sc->app = &hs->obj_type;
+	sc_ep_clr(sc, SE_FL_ORPHAN);
+	sc_ep_report_read_activity(sc);
+	sc->wait_event.tasklet = tasklet_new();
+	if (!sc->wait_event.tasklet)
+		return -1;
+
+	sc->wait_event.tasklet->process = sc_hstream_io_cb;
+	sc->wait_event.tasklet->context = sc;
+	sc->wait_event.events = 0;
+
+	sc->app_ops = &sc_app_hstream_ops;
 	return 0;
 }
 
