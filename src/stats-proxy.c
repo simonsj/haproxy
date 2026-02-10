@@ -1616,11 +1616,13 @@ int stats_dump_proxies(struct stconn *sc, struct buffer *buf, struct htx *htx)
 	struct proxy *px;
 
 	/* dump proxies */
-	while (ctx->obj1) {
+	/* obj1 is updated and returned through watcher_next() */
+	for (px = ctx->obj1; px;
+	     px = watcher_next(&ctx->px_watch, px->next)) {
+
 		if (stats_is_full(appctx, buf, htx))
 			goto full;
 
-		px = ctx->obj1;
 		/* Skip the global frontend proxies and non-networked ones.
 		 * Also skip proxies that were disabled in the configuration
 		 * This change allows retrieving stats from "old" proxies after a reload.
@@ -1631,7 +1633,6 @@ int stats_dump_proxies(struct stconn *sc, struct buffer *buf, struct htx *htx)
 				return 0;
 		}
 
-		ctx->obj1 = px->next;
 		ctx->px_st = STAT_PX_ST_INIT;
 		ctx->field = 0;
 	}

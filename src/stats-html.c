@@ -2116,6 +2116,8 @@ static size_t http_stats_fastfwd(struct appctx *appctx, struct buffer *buf,
 static void http_stats_release(struct appctx *appctx)
 {
 	struct show_stat_ctx *ctx = appctx->svcctx;
+	if (ctx->domain == STATS_DOMAIN_PROXY && ctx->obj1)
+		watcher_detach(&ctx->px_watch);
 	if (ctx->px_st == STAT_PX_ST_SV && ctx->obj2)
 		watcher_detach(&ctx->srv_watch);
 }
