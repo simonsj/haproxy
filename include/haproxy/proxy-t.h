@@ -507,6 +507,7 @@ struct proxy {
 	struct list filter_configs;		/* list of the filters that are declared on this proxy */
 
 	struct guid_node guid;			/* GUID global tree node */
+	struct mt_list watcher_list;		/* list of elems which currently references this proxy instance (currently only used with backends) */
 
 	EXTRA_COUNTERS(extra_counters_fe);
 	EXTRA_COUNTERS(extra_counters_be);

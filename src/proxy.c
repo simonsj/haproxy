@@ -1580,6 +1580,7 @@ void init_new_proxy(struct proxy *p)
 
 	p->stream_new_from_sc = stream_new;
 	guid_init(&p->guid);
+	MT_LIST_INIT(&p->watcher_list);
 
 	p->extra_counters_fe = NULL;
 	p->extra_counters_be = NULL;
