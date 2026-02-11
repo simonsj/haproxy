@@ -150,6 +150,8 @@ char **init_env;		/* to keep current process env variables backup */
 int  pidfd = -1;		/* FD to keep PID */
 int daemon_fd[2] = {-1, -1};	/* pipe to communicate with parent process */
 int devnullfd = -1;
+int fileless_mode;
+struct cfgfile fileless_cfg;
 
 static int stopped_tgroups;
 static int stop_detected;
@@ -3321,8 +3323,11 @@ int main(int argc, char **argv)
 	if (backup_env() != 0)
 		exit(EXIT_FAILURE);
 
-	/* parse conf in discovery mode and set modes from config */
-	read_cfg_in_discovery_mode(argc, argv);
+	if (!fileless_mode)
+		/* parse conf in discovery mode and set modes from config */
+		read_cfg_in_discovery_mode(argc, argv);
+	else
+		parse_cfg(&fileless_cfg);
 
 	/* From this stage all runtime modes are known. So let's do below some
 	 * preparation steps and then let's apply all discovered modes.
@@ -3364,8 +3369,10 @@ int main(int argc, char **argv)
 		mworker_apply_master_worker_mode();
 	}
 
-	/* Worker, daemon, foreground modes read the rest of the config */
-	if (!master) {
+	/* Worker, daemon, foreground, configuration with files modes read the rest
+	 * of the config.
+	 */
+	if (!master && !fileless_mode) {
 		usermsgs_clr("config");
 		if (global.mode & MODE_MWORKER) {
 			if (clean_env() != 0) {
