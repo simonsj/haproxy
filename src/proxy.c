@@ -456,9 +456,15 @@ void deinit_proxy(struct proxy *p)
 	proxy_unref_defaults(p);
 }
 
-/* deinit and free <p> proxy */
-void free_proxy(struct proxy *p)
+/* Decrement <p> refcount and free it if null. */
+void proxy_drop(struct proxy *p)
 {
+	if (!p)
+		return;
+
+	if (HA_ATOMIC_SUB_FETCH(&p->refcount, 1))
+		return;
+
 	deinit_proxy(p);
 	ha_free(&p);
 }
@@ -3211,6 +3217,8 @@ struct proxy *alloc_new_proxy(const char *name, unsigned int cap, char **errmsg)
 	if (!setup_new_proxy(curproxy, name, cap, errmsg))
 		goto fail;
 
+	proxy_take(curproxy);
+
  done:
 	return curproxy;
 
@@ -3223,6 +3231,12 @@ struct proxy *alloc_new_proxy(const char *name, unsigned int cap, char **errmsg)
 		srv_free(&curproxy->defsrv);
 	free(curproxy);
 	return NULL;
+}
+
+/* Increment <px> refcount. */
+void proxy_take(struct proxy *px)
+{
+	HA_ATOMIC_INC(&px->refcount);
 }
 
 /* post-check for proxies */
@@ -4955,8 +4969,8 @@ static int cli_parse_add_backend(char **args, char *payload, struct appctx *appc
 	return 1;
 
  err:
-	/* free_proxy() ensures any potential refcounting on defpx is decremented. */
-	free_proxy(px);
+	/* This ensures any potential refcounting on defpx is decremented. */
+	proxy_drop(px);
 	thread_release();
 
 	if (msg) {
@@ -5052,6 +5066,8 @@ static int cli_parse_delete_backend(char **args, char *payload, struct appctx *a
 		cli_err(appctx, msg);
 		goto out;
 	}
+
+	px->flags |= PR_FL_DELETED;
 
 	thread_release();
 
