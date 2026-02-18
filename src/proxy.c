@@ -4928,6 +4928,7 @@ static int cli_parse_add_backend(char **args, char *payload, struct appctx *appc
 		memprintf(&msg, "no spare proxy ID available");
 		goto err;
 	}
+	proxy_index_id(px);
 	dynpx_next_id = px->uuid;
 
 	if (!proxies_list) {
