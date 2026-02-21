@@ -21,6 +21,9 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      - name: Update Docker to the latest
+        uses: docker/setup-docker-action@v4
+
       - name: Build Docker image
         id: push
         uses: docker/build-push-action@v6
