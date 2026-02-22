@@ -11,9 +11,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v5
-    - name: Compile admin/halog/halog
-      run: |
-        make admin/halog/halog
     - name: Compile dev/flags/flags
       run: |
         make dev/flags/flags
