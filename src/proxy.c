@@ -2481,14 +2481,13 @@ int proxy_finalize(struct proxy *px, int *err_code)
 		if (!ceb_intree(&newsrv->conf.name_node))
 			continue;
 
-		for (other_srv = newsrv;
-		     (other_srv = cebis_item_prev_dup(&px->conf.used_server_name, conf.name_node, id, other_srv)); ) {
+		if ((other_srv = cebis_item_prev_dup(&px->conf.used_server_name, conf.name_node, id, newsrv))) {
 			ha_alert("parsing [%s:%d] : %s '%s', another server named '%s' was already defined at line %d, please use distinct names.\n",
 			         newsrv->conf.file, newsrv->conf.line,
 			         proxy_type_str(px), px->id,
 			         newsrv->id, other_srv->conf.line);
 			cfgerr++;
-			break;
+			continue;
 		}
 	}
 
