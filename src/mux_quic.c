@@ -1875,6 +1875,8 @@ int qcc_recv(struct qcc *qcc, uint64_t id, uint64_t len, uint64_t offset,
 	left = len;
 	while (left) {
 		struct qc_stream_rxbuf *buf;
+		struct proxy *px;
+		struct quic_counters *prx_counters;
 		ncb_sz_t ncb_off;
 
 		buf = qcs_get_rxbuf(qcs, offset, &len);
@@ -1911,6 +1913,9 @@ int qcc_recv(struct qcc *qcc, uint64_t id, uint64_t len, uint64_t offset,
 		case NCB_RET_GAP_SIZE:
 			TRACE_DATA("cannot bufferize frame due to gap size limit", QMUX_EV_QCC_RECV|QMUX_EV_QCS_RECV,
 			           qcc->conn, qcs);
+			px = qcc->proxy;
+			prx_counters = EXTRA_COUNTERS_GET(px->extra_counters_fe, &quic_stats_module);
+			HA_ATOMIC_INC(&prx_counters->ncbuf_gap_limit);
 			return 1;
 		}
 

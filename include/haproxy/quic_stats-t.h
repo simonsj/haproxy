@@ -52,6 +52,7 @@ enum {
 	QUIC_ST_STREAM_DATA_BLOCKED,
 	QUIC_ST_STREAMS_BLOCKED_BIDI,
 	QUIC_ST_STREAMS_BLOCKED_UNI,
+	QUIC_ST_NCBUF_GAP_LIMIT,
 	QUIC_STATS_COUNT /* must be the last */
 };
 
@@ -99,6 +100,7 @@ struct quic_counters {
 	long long stream_data_blocked;       /* total number of times STREAM_DATA_BLOCKED frame was received */
 	long long streams_blocked_bidi;      /* total number of times STREAMS_BLOCKED_BIDI frame was received */
 	long long streams_blocked_uni;       /* total number of times STREAMS_BLOCKED_UNI frame was received */
+	long long ncbuf_gap_limit;           /* total number of times we failed to add data to ncbuf due to gap size limit */
 };
 
 #endif /* USE_QUIC */

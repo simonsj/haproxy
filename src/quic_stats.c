@@ -86,6 +86,8 @@ static struct stat_col quic_stats[] = {
 	                                        .desc = "Total number of received STREAMS_BLOCKED_BIDI frames" },
 	[QUIC_ST_STREAMS_BLOCKED_UNI]       = { .name = "quic_streams_blocked_uni",
 	                                        .desc = "Total number of received STREAMS_BLOCKED_UNI frames" },
+	[QUIC_ST_NCBUF_GAP_LIMIT]           = { .name = "quic_ncbuf_gap_limit",
+	                                        .desc = "Total number of failures to add to ncbuf because of gap size limit" },
 };
 
 struct quic_counters quic_counters;
@@ -224,6 +226,9 @@ static int quic_fill_stats(void *data, struct field *stats, unsigned int *select
 			break;
 		case QUIC_ST_STREAMS_BLOCKED_UNI:
 			metric = mkf_u64(FN_COUNTER, counters->streams_blocked_uni);
+			break;
+		case QUIC_ST_NCBUF_GAP_LIMIT:
+			metric = mkf_u64(FN_COUNTER, counters->ncbuf_gap_limit);
 			break;
 		default:
 			/* not used for frontends. If a specific metric
