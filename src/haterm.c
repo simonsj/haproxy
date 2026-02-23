@@ -645,7 +645,7 @@ static void hstream_parse_uri(struct ist uri, struct hstream *hs)
 				} while (*next);
 
 				if (use_rand)
-					result = ((long long)random() * result) / ((long long)RAND_MAX + 1);
+					result = ((long long)ha_random64() * result) / ((long long)RAND_MAX + 1);
 
 				switch (*arg) {
 				case 's':
@@ -1016,7 +1016,7 @@ static int hstream_build_responses(void)
 	}
 
 	for (i = 0; i < random_resp_len; i++)
-		random_resp[i] = rand() >> 16;
+		random_resp[i] = ha_random32() >> 16;
 
 	return 1;
 }
