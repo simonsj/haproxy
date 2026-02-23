@@ -669,6 +669,13 @@ int cfg_parse_listen(const char *file, int linenum, char **args, int kwm)
 			err_code |= ERR_ALERT | ERR_FATAL;
 			goto out;
 		}
+		else {
+			/* valid mode, non "haterm" mode.
+			 * Possibly restore the ->stream_new_from_sc() callback
+			 * if set by default for "haterm" mode.
+			 */
+			curproxy->stream_new_from_sc = stream_new;
+		}
 
 		curproxy->mode = mode;
 		if (curproxy->cap & PR_CAP_DEF)
