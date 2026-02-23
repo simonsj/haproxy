@@ -143,6 +143,8 @@ static struct itbmap itbmap_next(const struct ncbmbuf *buf,
 	if (off_next == ncbmb_size(buf)) {
 		next.b = NULL;
 		next.off = off_next;
+		next.mask = 0;
+		next.bits = 0;
 	}
 	else {
 		itbmap_load(&next, prev->off + prev->bits, buf);
