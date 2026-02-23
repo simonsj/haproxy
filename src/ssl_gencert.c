@@ -524,7 +524,6 @@ X509 *ssl_gen_x509(EVP_PKEY *pkey)
 	X509         *newcrt  = NULL;
 	X509_NAME    *name;
 	const EVP_MD *digest = NULL;
-	CONF         *ctmp    = NULL;
 	int 	      key_type;
 
 	/* Create the certificate */
@@ -581,7 +580,6 @@ X509 *ssl_gen_x509(EVP_PKEY *pkey)
 	return newcrt;
 
 mkcert_error:
-	if (ctmp) NCONF_free(ctmp);
 	if (newcrt)  X509_free(newcrt);
 	return NULL;
 
