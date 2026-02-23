@@ -143,7 +143,6 @@ static int ssl_parse_global_ssl_async(char **args, int section_type, struct prox
 #endif
 }
 
-#if defined(USE_ENGINE) && !defined(OPENSSL_NO_ENGINE)
 /* parse the "ssl-engine" keyword in global section.
  * Returns <0 on alert, >0 on warning, 0 on success.
  */
@@ -151,6 +150,7 @@ static int ssl_parse_global_ssl_engine(char **args, int section_type, struct pro
                                        const struct proxy *defpx, const char *file, int line,
                                        char **err)
 {
+#if defined(USE_ENGINE) && !defined(OPENSSL_NO_ENGINE)
 	char *algo;
 	int ret = -1;
 
@@ -184,10 +184,12 @@ add_engine:
 	}
 	free(algo);
 	return ret;
-}
+#else
+	memprintf(err, "'%s' is not supported (built without USE_ENGINE or with -DOPENSSL_NO_ENGINE).", args[0]);
+	return -1;
 #endif
+}
 
-#ifdef HAVE_SSL_PROVIDERS
 /* parse the "ssl-propquery" keyword in global section.
  * Returns <0 on alert, >0 on warning, 0 on success.
  */
@@ -195,6 +197,7 @@ static int ssl_parse_global_ssl_propquery(char **args, int section_type, struct 
 					  const struct proxy *defpx, const char *file, int line,
 					  char **err)
 {
+#ifdef HAVE_SSL_PROVIDERS
 	int ret = -1;
 
 	if (*(args[1]) == 0) {
@@ -206,6 +209,10 @@ static int ssl_parse_global_ssl_propquery(char **args, int section_type, struct 
 		ret = 0;
 
 	return ret;
+#else
+	memprintf(err, "'%s' is not supported by %s.", args[0], OpenSSL_version(OPENSSL_VERSION));
+	return -1;
+#endif
 }
 
 /* parse the "ssl-provider" keyword in global section.
@@ -215,6 +222,7 @@ static int ssl_parse_global_ssl_provider(char **args, int section_type, struct p
 					 const struct proxy *defpx, const char *file, int line,
 					 char **err)
 {
+#ifdef HAVE_SSL_PROVIDERS
 	int ret = -1;
 
 	if (*(args[1]) == 0) {
@@ -226,6 +234,10 @@ static int ssl_parse_global_ssl_provider(char **args, int section_type, struct p
 		ret = 0;
 
 	return ret;
+#else
+	memprintf(err, "'%s' is not supported by %s.", args[0], OpenSSL_version(OPENSSL_VERSION));
+	return -1;
+#endif
 }
 
 /* parse the "ssl-provider-path" keyword in global section.
@@ -235,6 +247,7 @@ static int ssl_parse_global_ssl_provider_path(char **args, int section_type, str
 					      const struct proxy *defpx, const char *file, int line,
 					      char **err)
 {
+#ifdef HAVE_SSL_PROVIDERS
 	if (*(args[1]) == 0) {
 		memprintf(err, "global statement '%s' expects a directory path as an argument.", args[0]);
 		return -1;
@@ -243,8 +256,11 @@ static int ssl_parse_global_ssl_provider_path(char **args, int section_type, str
 	OSSL_PROVIDER_set_default_search_path(NULL, args[1]);
 
 	return 0;
-}
+#else
+	memprintf(err, "'%s' is not supported by %s.", args[0], OpenSSL_version(OPENSSL_VERSION));
+	return -1;
 #endif
+}
 
 /* parse the "ssl-default-bind-ciphers" / "ssl-default-server-ciphers" keywords
  * in global section. Returns <0 on alert, >0 on warning, 0 on success.
@@ -300,7 +316,6 @@ static int ssl_parse_global_ciphersuites(char **args, int section_type, struct p
 #endif
 }
 
-#if defined(SSL_CTX_set1_curves_list)
 /*
  * parse the "ssl-default-bind-curves" keyword in a global section.
  * Returns <0 on alert, >0 on warning, 0 on success.
@@ -309,6 +324,10 @@ static int ssl_parse_global_curves(char **args, int section_type, struct proxy *
                                    const struct proxy *defpx, const char *file, int line,
 				   char **err)
 {
+#ifndef SSL_CTX_set1_curves_list
+	memprintf(err, "'%s' is not supported by %s.", args[0], OpenSSL_version(OPENSSL_VERSION));
+	return -1;
+#else
 	char **target;
 	target = (args[0][12] == 'b') ? &global_ssl.listen_default_curves : &global_ssl.connect_default_curves;
 
@@ -323,10 +342,9 @@ static int ssl_parse_global_curves(char **args, int section_type, struct proxy *
 	free(*target);
 	*target = strdup(args[1]);
 	return 0;
-}
 #endif
+}
 
-#if defined(SSL_CTX_set1_sigalgs_list)
 /*
  * parse the "ssl-default-bind-sigalgs" and "ssl-default-server-sigalgs" keyword in a global section.
  * Returns <0 on alert, >0 on warning, 0 on success.
@@ -335,6 +353,10 @@ static int ssl_parse_global_sigalgs(char **args, int section_type, struct proxy 
                                    const struct proxy *defpx, const char *file, int line,
 				   char **err)
 {
+#ifndef SSL_CTX_set1_sigalgs_list
+	memprintf(err, "'%s' is not supported by %s.", args[0], OpenSSL_version(OPENSSL_VERSION));
+	return -1;
+#else
 	char **target;
 
 	target = (args[0][12] == 'b') ? &global_ssl.listen_default_sigalgs : &global_ssl.connect_default_sigalgs;
@@ -350,10 +372,9 @@ static int ssl_parse_global_sigalgs(char **args, int section_type, struct proxy 
 	free(*target);
 	*target = strdup(args[1]);
 	return 0;
-}
 #endif
+}
 
-#if defined(SSL_CTX_set1_client_sigalgs_list)
 /*
  * parse the "ssl-default-bind-client-sigalgs" keyword in a global section.
  * Returns <0 on alert, >0 on warning, 0 on success.
@@ -362,6 +383,10 @@ static int ssl_parse_global_client_sigalgs(char **args, int section_type, struct
                                    const struct proxy *defpx, const char *file, int line,
 				   char **err)
 {
+#ifndef SSL_CTX_set1_client_sigalgs_list
+	memprintf(err, "'%s' is not supported by %s.", args[0], OpenSSL_version(OPENSSL_VERSION));
+	return -1;
+#else
 	char **target;
 
 	target = (args[0][12] == 'b') ? &global_ssl.listen_default_client_sigalgs : &global_ssl.connect_default_client_sigalgs;
@@ -377,8 +402,8 @@ static int ssl_parse_global_client_sigalgs(char **args, int section_type, struct
 	free(*target);
 	*target = strdup(args[1]);
 	return 0;
-}
 #endif
+}
 
 /* parse various global tune.ssl settings consisting in positive integers.
  * Returns <0 on alert, >0 on warning, 0 on success.
@@ -575,7 +600,6 @@ static int ssl_parse_global_lifetime(char **args, int section_type, struct proxy
 	return 0;
 }
 
-#ifndef OPENSSL_NO_DH
 /* parse "ssl-dh-param-file".
  * Returns <0 on alert, >0 on warning, 0 on success.
  */
@@ -583,6 +607,7 @@ static int ssl_parse_global_dh_param_file(char **args, int section_type, struct 
                                        const struct proxy *defpx, const char *file, int line,
                                        char **err)
 {
+#ifndef OPENSSL_NO_DH
 	if (too_many_args(1, args, err, NULL))
 		return -1;
 
@@ -596,9 +621,11 @@ static int ssl_parse_global_dh_param_file(char **args, int section_type, struct 
 		return -1;
 	}
 	return 0;
-}
-
+#else
+	memprintf(err, "'%s' is not supported by %s (no DH support).", args[0], OpenSSL_version(OPENSSL_VERSION));
+	return -1;
 #endif
+}
 
 /* parse "ssl.default-dh-param".
  * Returns <0 on alert, >0 on warning, 0 on success.
@@ -2779,18 +2806,12 @@ static struct cfg_kw_list cfg_kws = {ILH, {
 	{ CFG_GLOBAL, "maxsslconn", ssl_parse_global_int },
 	{ CFG_GLOBAL, "ssl-default-bind-options", ssl_parse_default_bind_options },
 	{ CFG_GLOBAL, "ssl-default-server-options", ssl_parse_default_server_options },
-#ifndef OPENSSL_NO_DH
 	{ CFG_GLOBAL, "ssl-dh-param-file", ssl_parse_global_dh_param_file },
-#endif
 	{ CFG_GLOBAL, "ssl-mode-async",  ssl_parse_global_ssl_async },
-#if defined(USE_ENGINE) && !defined(OPENSSL_NO_ENGINE)
 	{ CFG_GLOBAL, "ssl-engine",  ssl_parse_global_ssl_engine },
-#endif
-#ifdef HAVE_SSL_PROVIDERS
 	{ CFG_GLOBAL, "ssl-propquery",  ssl_parse_global_ssl_propquery },
 	{ CFG_GLOBAL, "ssl-provider",  ssl_parse_global_ssl_provider },
 	{ CFG_GLOBAL, "ssl-provider-path",  ssl_parse_global_ssl_provider_path },
-#endif
 	{ CFG_GLOBAL, "ssl-security-level", ssl_parse_security_level },
 	{ CFG_GLOBAL, "ssl-skip-self-issued-ca", ssl_parse_skip_self_issued_ca },
 	{ CFG_GLOBAL, "tune.ssl.cachesize", ssl_parse_global_int },
@@ -2806,18 +2827,12 @@ static struct cfg_kw_list cfg_kws = {ILH, {
 	{ CFG_GLOBAL, "tune.ssl.keylog", ssl_parse_global_keylog },
 	{ CFG_GLOBAL, "ssl-default-bind-ciphers", ssl_parse_global_ciphers },
 	{ CFG_GLOBAL, "ssl-default-server-ciphers", ssl_parse_global_ciphers },
-#if defined(SSL_CTX_set1_curves_list)
 	{ CFG_GLOBAL, "ssl-default-bind-curves", ssl_parse_global_curves },
 	{ CFG_GLOBAL, "ssl-default-server-curves", ssl_parse_global_curves },
-#endif
-#if defined(SSL_CTX_set1_sigalgs_list)
 	{ CFG_GLOBAL, "ssl-default-bind-sigalgs", ssl_parse_global_sigalgs },
 	{ CFG_GLOBAL, "ssl-default-server-sigalgs", ssl_parse_global_sigalgs },
-#endif
-#if defined(SSL_CTX_set1_client_sigalgs_list)
 	{ CFG_GLOBAL, "ssl-default-bind-client-sigalgs", ssl_parse_global_client_sigalgs },
 	{ CFG_GLOBAL, "ssl-default-server-client-sigalgs", ssl_parse_global_client_sigalgs },
-#endif
 	{ CFG_GLOBAL, "ssl-default-bind-ciphersuites", ssl_parse_global_ciphersuites },
 	{ CFG_GLOBAL, "ssl-default-server-ciphersuites", ssl_parse_global_ciphersuites },
 	{ CFG_GLOBAL, "ssl-load-extra-files", ssl_parse_global_extra_files },
