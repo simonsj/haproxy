@@ -467,6 +467,9 @@ static int spoe_handle_receiving_frame_appctx(struct appctx *appctx)
 		goto end;
 	}
 
+	if (!spoe_acquire_buffer(&spoe_ctx->buffer, &spoe_ctx->buffer_wait))
+		goto end;
+
 	if (b_data(&appctx->inbuf) > spoe_appctx->agent->max_frame_size) {
 		spoe_ctx->state = SPOE_CTX_ST_ERROR;
 		spoe_ctx->status_code = (spoe_appctx->status_code + 0x100);
