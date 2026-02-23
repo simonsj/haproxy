@@ -496,12 +496,8 @@ static void hstream_add_data(struct htx *htx, struct hstream *hs)
 		TRACE_STATE("unable to add payload to HTX message", HS_EV_HSTRM_ADD_DATA, hs);
 
 	hs->to_write -= ret;
-leave:
 	TRACE_LEAVE(HS_EV_HSTRM_ADD_DATA, hs);
 	return;
-err:
-	TRACE_DEVEL("leaving on error", HS_EV_HSTRM_ADD_DATA);
-	goto leave;
 }
 
 /* Build the HTTP response with eventually some BODY data depending on ->to_write
