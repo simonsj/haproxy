@@ -2454,18 +2454,7 @@ stats_error_parsing:
 			}
 
 			curproxy->no_options2 &= ~val;
-			curproxy->options2    &= ~val;
-
-			switch (kwm) {
-			case KWM_STD:
-				curproxy->options2 |= val;
-				break;
-			case KWM_NO:
-				curproxy->no_options2 |= val;
-				break;
-			case KWM_DEF: /* already cleared */
-				break;
-			}
+			curproxy->options2    |= val;
 
 			err_code |= ERR_WARN;
 			goto out;
