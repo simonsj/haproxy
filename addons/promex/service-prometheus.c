@@ -36,6 +36,7 @@
 #include <haproxy/stats.h>
 #include <haproxy/stconn.h>
 #include <haproxy/stream.h>
+#include <haproxy/stress.h>
 #include <haproxy/task.h>
 #include <haproxy/tools.h>
 #include <haproxy/version.h>
@@ -346,6 +347,10 @@ static int promex_dump_ts(struct appctx *appctx, struct ist prefix,
 	/* Fill the metric name */
 	istcat(&n, prefix, PROMEX_MAX_NAME_LEN);
 	istcat(&n, name, PROMEX_MAX_NAME_LEN);
+
+	/* In stress mode, force yielding on each metric. */
+	if (STRESS_RUN1(istlen(*out), 0))
+		goto full;
 
 	if ((ctx->flags & PROMEX_FL_METRIC_HDR) &&
 	    !promex_dump_ts_header(n, desc, type, out, max))
