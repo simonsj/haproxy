@@ -1353,23 +1353,39 @@ int qc_alloc_ssl_sock_ctx(struct quic_conn *qc, void *target)
 		if (!qc_ssl_set_quic_transport_params(ctx->ssl, qc, quic_version_1, 0))
 			goto err;
 
-		if (!(srv->ssl_ctx.options & SRV_SSL_O_EARLY_DATA))
-		    ssl_sock_srv_try_reuse_sess(ctx, srv);
+		ssl_sock_srv_try_reuse_sess(ctx, srv);
 #if (HA_OPENSSL_VERSION_NUMBER >= 0x10101000L) && defined(HAVE_SSL_0RTT_QUIC)
-		else {
-			/* Enable early data only if the SSL session, transport parameters
-			 * and application protocol could be reused. This insures the mux is
-			 * correctly selected.
+		if ((srv->ssl_ctx.options & SRV_SSL_O_EARLY_DATA)) {
+			int ret;
+			unsigned char *alpn;
+			struct quic_early_transport_params *etps;
+			/* This code is called by connect_server() by way of
+			 * conn_prepare().
+			 * XXX TODO XXX: there is a remaining race condition where
+			 * the negotiated alpn could be resetted before running this code
+			 * here. In this case the app_ops for the mux will not be
+			 * set by quic_reuse_srv_params().
+			 *
+			 * Enable the early data only if the transport parameters
+			 * and application protocol could be reused. This insures that
+			 * no early-data level secrets will be derived if this is not
+			 * the case, leading the mux to be started but without being
+			 * able to send data at early-data level.
 			 */
-			if (ssl_sock_srv_try_reuse_sess(ctx, srv))
+			HA_RWLOCK_RDLOCK(SERVER_LOCK, &srv->path_params.param_lock);
+			alpn = (unsigned char *)srv->path_params.nego_alpn;
+			etps = &srv->path_params.tps;
+			ret = quic_reuse_srv_params(qc, alpn, etps);
+			HA_RWLOCK_RDUNLOCK(SERVER_LOCK, &srv->path_params.param_lock);
+			if (ret) {
 				SSL_set_quic_early_data_enabled(ctx->ssl, 1);
+			}
 			else {
 				/* No error here. 0-RTT will not be enabled. */
 				TRACE_PROTO("Could not reuse any ALPN", QUIC_EV_CONN_NEW, qc);
 			}
 		}
 #endif
-
 		SSL_set_connect_state(ctx->ssl);
 	}
 

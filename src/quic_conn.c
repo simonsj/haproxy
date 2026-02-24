@@ -285,6 +285,8 @@ int quic_set_app_ops(struct quic_conn *qc, const unsigned char *alpn, size_t alp
 }
 
 /* Try to reuse <alpn> ALPN and <etps> early transport parameters.
+ * This function also sets the application operations calling
+ * quic_set_app_ops().
  * Return 1 if succeeded, 0 if not.
  */
 int quic_reuse_srv_params(struct quic_conn *qc,
