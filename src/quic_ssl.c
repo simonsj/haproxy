@@ -1,3 +1,4 @@
+#include <haproxy/counters.h>
 #include <haproxy/errors.h>
 #include <haproxy/ncbmbuf.h>
 #include <haproxy/proxy.h>
@@ -9,7 +10,6 @@
 #include <haproxy/quic_tp.h>
 #include <haproxy/quic_trace.h>
 #include <haproxy/ssl_sock.h>
-#include <haproxy/stats.h>
 #include <haproxy/trace.h>
 #ifdef USE_ECH
 #include <haproxy/ech.h>

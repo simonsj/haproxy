@@ -50,7 +50,6 @@
 #include <haproxy/resolvers.h>
 #include <haproxy/sample.h>
 #include <haproxy/session.h>
-#include <haproxy/stats-t.h>
 #include <haproxy/stconn.h>
 #include <haproxy/stick_table.h>
 #include <haproxy/stream.h>

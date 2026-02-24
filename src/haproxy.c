@@ -117,7 +117,6 @@
 #include <haproxy/sock_inet.h>
 #include <haproxy/ssl_sock.h>
 #include <haproxy/stats-file.h>
-#include <haproxy/stats-t.h>
 #include <haproxy/stream.h>
 #include <haproxy/systemd.h>
 #include <haproxy/task.h>

@@ -38,7 +38,6 @@
 #include <haproxy/obj_type-t.h>
 #include <haproxy/queue-t.h>
 #include <haproxy/server-t.h>
-#include <haproxy/stats-t.h>
 #include <haproxy/tcpcheck-t.h>
 #include <haproxy/thread-t.h>
 #include <haproxy/tools-t.h>

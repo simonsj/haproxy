@@ -20,7 +20,6 @@
 #include <haproxy/base64.h>
 #include <haproxy/errors.h>
 #include <haproxy/list.h>
-#include <haproxy/stats-t.h>
 #include <haproxy/uri_auth.h>
 
 

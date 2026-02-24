@@ -22,7 +22,6 @@
 #include <haproxy/regex.h>
 #include <haproxy/sample.h>
 #include <haproxy/sc_strm.h>
-#include <haproxy/stats-t.h>
 #include <haproxy/stconn.h>
 #include <haproxy/tools.h>
 

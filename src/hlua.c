@@ -57,7 +57,6 @@
 #include <haproxy/session.h>
 #include <haproxy/ssl_ckch.h>
 #include <haproxy/ssl_sock.h>
-#include <haproxy/stats-t.h>
 #include <haproxy/stconn.h>
 #include <haproxy/stream.h>
 #include <haproxy/task.h>

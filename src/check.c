@@ -34,7 +34,7 @@
 #include <haproxy/cfgparse.h>
 #include <haproxy/check.h>
 #include <haproxy/chunk.h>
-#include <haproxy/counters.h>
+#include <haproxy/counters-t.h>
 #include <haproxy/dgram.h>
 #include <haproxy/dynbuf.h>
 #include <haproxy/extcheck.h>
@@ -58,7 +58,6 @@
 #include <haproxy/sample.h>
 #include <haproxy/server.h>
 #include <haproxy/ssl_sock.h>
-#include <haproxy/stats-t.h>
 #include <haproxy/task.h>
 #include <haproxy/tcpcheck.h>
 #include <haproxy/thread.h>

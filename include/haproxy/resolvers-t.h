@@ -27,7 +27,6 @@
 #include <haproxy/connection-t.h>
 #include <haproxy/dns-t.h>
 #include <haproxy/obj_type-t.h>
-#include <haproxy/stats-t.h>
 #include <haproxy/task-t.h>
 #include <haproxy/thread.h>
 

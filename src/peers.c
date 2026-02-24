@@ -39,7 +39,6 @@
 #include <haproxy/sc_strm.h>
 #include <haproxy/session-t.h>
 #include <haproxy/signal.h>
-#include <haproxy/stats-t.h>
 #include <haproxy/stconn.h>
 #include <haproxy/stick_table.h>
 #include <haproxy/stream.h>

@@ -31,7 +31,6 @@
 #include <haproxy/proxy.h>
 #include <haproxy/sample.h>
 #include <haproxy/server.h>
-#include <haproxy/stats-t.h>
 #include <haproxy/stick_table.h>
 #include <haproxy/tcpcheck.h>
 #include <haproxy/tools.h>

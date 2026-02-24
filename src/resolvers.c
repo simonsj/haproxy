@@ -27,6 +27,7 @@
 #include <haproxy/channel.h>
 #include <haproxy/check.h>
 #include <haproxy/cli.h>
+#include <haproxy/counters.h>
 #include <haproxy/dns.h>
 #include <haproxy/dns_ring.h>
 #include <haproxy/errors.h>

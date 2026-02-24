@@ -24,12 +24,12 @@
 
 #include <import/ebtree-t.h>
 
-#include <haproxy/connection-t.h>
 #include <haproxy/buf-t.h>
+#include <haproxy/connection-t.h>
+#include <haproxy/counters-t.h>
 #include <haproxy/dgram-t.h>
 #include <haproxy/dns_ring-t.h>
 #include <haproxy/obj_type-t.h>
-#include <haproxy/stats-t.h>
 #include <haproxy/task-t.h>
 #include <haproxy/thread.h>
 
