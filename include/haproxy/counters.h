@@ -27,6 +27,8 @@
 #include <haproxy/counters-t.h>
 #include <haproxy/guid-t.h>
 
+extern THREAD_LOCAL void *trash_counters;
+
 int counters_fe_shared_prepare(struct fe_counters_shared *counters, const struct guid_node *guid, char **errmsg);
 int counters_be_shared_prepare(struct be_counters_shared *counters, const struct guid_node *guid, char **errmsg);
 
@@ -100,5 +102,51 @@ void counters_be_shared_drop(struct be_counters_shared *counters);
 		__ret += rfunc(&scounters[it]->elem, arg1, arg2);             \
 	__ret;                                                                \
 })
+
+/* Manipulation of extra_counters, for boot-time registrable modules */
+#define EXTRA_COUNTERS_GET(counters, mod) \
+	(likely(counters) ? \
+		((void *)((counters)->data + (mod)->counters_off[(counters)->type])) : \
+		(trash_counters))
+
+#define EXTRA_COUNTERS_REGISTER(counters, ctype, alloc_failed_label) \
+	do {                                                         \
+		typeof(*counters) _ctr;                              \
+		_ctr = calloc(1, sizeof(*_ctr));                     \
+		if (!_ctr)                                           \
+			goto alloc_failed_label;                     \
+		_ctr->type = (ctype);                                \
+		*(counters) = _ctr;                                  \
+	} while (0)
+
+#define EXTRA_COUNTERS_ADD(mod, counters, new_counters, csize) \
+	do {                                                   \
+		typeof(counters) _ctr = (counters);            \
+		(mod)->counters_off[_ctr->type] = _ctr->size;  \
+		_ctr->size += (csize);                         \
+	} while (0)
+
+#define EXTRA_COUNTERS_ALLOC(counters, alloc_failed_label) \
+	do {                                               \
+		typeof(counters) _ctr = (counters);        \
+		_ctr->data = malloc((_ctr)->size);         \
+		if (!_ctr->data)                           \
+			goto alloc_failed_label;           \
+	} while (0)
+
+#define EXTRA_COUNTERS_INIT(counters, mod, init_counters, init_counters_size) \
+	do {                                                                  \
+		typeof(counters) _ctr = (counters);                           \
+		memcpy(_ctr->data + mod->counters_off[_ctr->type],            \
+		       (init_counters), (init_counters_size));                \
+	} while (0)
+
+#define EXTRA_COUNTERS_FREE(counters)           \
+	do {                                    \
+		if (counters) {                 \
+			free((counters)->data); \
+			free(counters);         \
+		}                               \
+	} while (0)
 
 #endif /* _HAPROXY_COUNTERS_H */

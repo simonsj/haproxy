@@ -30,6 +30,7 @@
 #include <import/eb64tree.h>
 #include <import/ebmbtree.h>
 
+#include <haproxy/counters.h>
 #include <haproxy/chunk.h>
 #include <haproxy/dynbuf.h>
 #include <haproxy/ncbmbuf.h>

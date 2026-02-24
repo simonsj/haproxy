@@ -185,6 +185,27 @@ struct be_counters {
 	} p;                                    /* protocol-specific stats */
 };
 
+/* extra counters that are registered at boot by various modules */
+enum counters_type {
+	COUNTERS_FE = 0,
+	COUNTERS_BE,
+	COUNTERS_SV,
+	COUNTERS_LI,
+	COUNTERS_RSLV,
+
+	COUNTERS_OFF_END /* must always be last */
+};
+
+struct extra_counters {
+	char *data; /* heap containing counters allocated in a linear fashion */
+	size_t size; /* size of allocated data */
+	enum counters_type type; /* type of object containing the counters */
+};
+
+
+#define EXTRA_COUNTERS(name) \
+	struct extra_counters *name
+
 #endif /* _HAPROXY_COUNTERS_T_H */
 
 /*
