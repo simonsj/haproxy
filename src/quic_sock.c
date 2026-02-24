@@ -38,6 +38,7 @@
 #include <haproxy/quic_conn.h>
 #include <haproxy/quic_rx.h>
 #include <haproxy/quic_sock.h>
+#include <haproxy/quic_stats.h>
 #include <haproxy/quic_tp-t.h>
 #include <haproxy/quic_trace.h>
 #include <haproxy/session.h>

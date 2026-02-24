@@ -6,8 +6,6 @@
 #error "Must define USE_OPENSSL"
 #endif
 
-extern struct stats_module quic_stats_module;
-
 enum {
 	QUIC_ST_RXBUF_FULL,
 	QUIC_ST_DROPPED_PACKET,

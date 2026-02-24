@@ -38,7 +38,6 @@
 #include <haproxy/quic_cc-t.h>
 #include <haproxy/quic_frame-t.h>
 #include <haproxy/quic_openssl_compat-t.h>
-#include <haproxy/quic_stats-t.h>
 #include <haproxy/quic_tls-t.h>
 #include <haproxy/quic_tp-t.h>
 #include <haproxy/show_flags-t.h>

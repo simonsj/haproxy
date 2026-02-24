@@ -7,7 +7,9 @@
 #endif
 
 #include <haproxy/quic_stats-t.h>
+#include <haproxy/stats-t.h>
 
+extern struct stats_module quic_stats_module;
 void quic_stats_transp_err_count_inc(struct quic_counters *ctrs, int error_code);
 
 #endif /* USE_QUIC */

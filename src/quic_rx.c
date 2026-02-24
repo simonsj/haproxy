@@ -25,6 +25,7 @@
 #include <haproxy/quic_retry.h>
 #include <haproxy/quic_rules.h>
 #include <haproxy/quic_sock.h>
+#include <haproxy/quic_stats.h>
 #include <haproxy/quic_stream.h>
 #include <haproxy/quic_ssl.h>
 #include <haproxy/quic_tls.h>

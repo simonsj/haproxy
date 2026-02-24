@@ -25,6 +25,7 @@
 #include <haproxy/quic_retransmit.h>
 #include <haproxy/quic_retry.h>
 #include <haproxy/quic_sock.h>
+#include <haproxy/quic_stats.h>
 #include <haproxy/quic_stream.h>
 #include <haproxy/quic_tls.h>
 #include <haproxy/quic_trace.h>

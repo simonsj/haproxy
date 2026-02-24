@@ -22,6 +22,7 @@
 #include <haproxy/quic_pacing.h>
 #include <haproxy/quic_sock.h>
 #include <haproxy/quic_stream.h>
+#include <haproxy/quic_stats.h>
 #include <haproxy/quic_tp-t.h>
 #include <haproxy/quic_tune.h>
 #include <haproxy/quic_tx.h>

@@ -4,6 +4,7 @@
 #include <haproxy/errors.h>
 #include <haproxy/global.h>
 #include <haproxy/quic_retry.h>
+#include <haproxy/quic_stats.h>
 #include <haproxy/quic_tls.h>
 #include <haproxy/quic_trace-t.h>
 #include <haproxy/trace.h>
