@@ -152,6 +152,7 @@ struct dns_nameserver {
 	struct dns_stream_server *stream; /* used for tcp dns */
 
 	EXTRA_COUNTERS(extra_counters);
+	char *extra_counters_storage;    /* storage used for extra_counters above */
 	struct dns_counters *counters;
 
 	struct list list;               /* nameserver chained list */

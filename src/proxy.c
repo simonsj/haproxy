@@ -4914,7 +4914,8 @@ static int cli_parse_add_backend(char **args, char *payload, struct appctx *appc
 
 	if (!stats_allocate_proxy_counters_internal(&px->extra_counters_be,
 	                                            COUNTERS_BE,
-	                                            STATS_PX_CAP_BE)) {
+	                                            STATS_PX_CAP_BE,
+	                                            &px->per_tgrp->extra_counters_be_storage)) {
 		memprintf(&msg, "failed to allocate extra counters");
 		goto err;
 	}

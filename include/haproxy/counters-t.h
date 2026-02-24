@@ -197,7 +197,7 @@ enum counters_type {
 };
 
 struct extra_counters {
-	char *data; /* heap containing counters allocated in a linear fashion */
+	char **datap; /* points to pointer to heap containing counters allocated in a linear fashion */
 	size_t size; /* size of allocated data */
 	enum counters_type type; /* type of object containing the counters */
 };

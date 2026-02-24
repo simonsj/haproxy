@@ -2906,7 +2906,7 @@ int resolv_allocate_counters(struct list *stat_modules)
 	list_for_each_entry(resolvers, &sec_resolvers, list) {
 		list_for_each_entry(ns, &resolvers->nameservers, list) {
 			EXTRA_COUNTERS_REGISTER(&ns->extra_counters, COUNTERS_RSLV,
-			                        alloc_failed);
+			                        alloc_failed, &ns->extra_counters_storage);
 
 			list_for_each_entry(mod, stat_modules, list) {
 				EXTRA_COUNTERS_ADD(mod,
@@ -2918,12 +2918,12 @@ int resolv_allocate_counters(struct list *stat_modules)
 			EXTRA_COUNTERS_ALLOC(ns->extra_counters, alloc_failed);
 
 			list_for_each_entry(mod, stat_modules, list) {
-				memcpy(ns->extra_counters->data + mod->counters_off[ns->extra_counters->type],
+				memcpy(*ns->extra_counters->datap + mod->counters_off[ns->extra_counters->type],
 				       mod->counters, mod->counters_size);
 
 				/* Store the ns counters pointer */
 				if (strcmp(mod->name, "resolvers") == 0) {
-					ns->counters = (struct dns_counters *)ns->extra_counters->data + mod->counters_off[COUNTERS_RSLV];
+					ns->counters = (struct dns_counters *)(*ns->extra_counters->datap) + mod->counters_off[COUNTERS_RSLV];
 					ns->counters->id = ns->id;
 					ns->counters->ns_puid = ns->puid;
 					ns->counters->pid = resolvers->id;

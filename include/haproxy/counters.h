@@ -106,16 +106,17 @@ void counters_be_shared_drop(struct be_counters_shared *counters);
 /* Manipulation of extra_counters, for boot-time registrable modules */
 #define EXTRA_COUNTERS_GET(counters, mod) \
 	(likely(counters) ? \
-		((void *)((counters)->data + (mod)->counters_off[(counters)->type])) : \
+		((void *)(*(counters)->datap + (mod)->counters_off[(counters)->type])) : \
 		(trash_counters))
 
-#define EXTRA_COUNTERS_REGISTER(counters, ctype, alloc_failed_label) \
+#define EXTRA_COUNTERS_REGISTER(counters, ctype, alloc_failed_label, storage)	\
 	do {                                                         \
 		typeof(*counters) _ctr;                              \
 		_ctr = calloc(1, sizeof(*_ctr));                     \
 		if (!_ctr)                                           \
 			goto alloc_failed_label;                     \
 		_ctr->type = (ctype);                                \
+		_ctr->datap = (storage);                             \
 		*(counters) = _ctr;                                  \
 	} while (0)
 
@@ -129,22 +130,22 @@ void counters_be_shared_drop(struct be_counters_shared *counters);
 #define EXTRA_COUNTERS_ALLOC(counters, alloc_failed_label) \
 	do {                                               \
 		typeof(counters) _ctr = (counters);        \
-		_ctr->data = malloc((_ctr)->size);         \
-		if (!_ctr->data)                           \
+		*_ctr->datap = malloc((_ctr)->size);       \
+		if (!*_ctr->datap)                         \
 			goto alloc_failed_label;           \
 	} while (0)
 
 #define EXTRA_COUNTERS_INIT(counters, mod, init_counters, init_counters_size) \
 	do {                                                                  \
 		typeof(counters) _ctr = (counters);                           \
-		memcpy(_ctr->data + mod->counters_off[_ctr->type],            \
+		memcpy(*_ctr->datap + mod->counters_off[_ctr->type],          \
 		       (init_counters), (init_counters_size));                \
 	} while (0)
 
 #define EXTRA_COUNTERS_FREE(counters)           \
 	do {                                    \
 		if (counters) {                 \
-			free((counters)->data); \
+			ha_free((counters)->datap);\
 			free(counters);         \
 		}                               \
 	} while (0)

@@ -286,6 +286,7 @@ struct srv_per_tgroup {
 	struct queue queue;			/* pending connections */
 	struct server *server;                  /* pointer to the corresponding server */
 	struct eb32_node lb_node;               /* node used for tree-based load balancing */
+	char *extra_counters_storage;           /* storage for extra_counters */
 	struct server *next_full;               /* next server in the temporary full list */
 	unsigned int last_other_tgrp_served;	/* Last other tgrp we dequeued from */
 	unsigned int self_served;		/* Number of connection we dequeued from our own queue */

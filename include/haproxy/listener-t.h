@@ -263,6 +263,7 @@ struct listener {
 
 	struct li_per_thread *per_thr;  /* per-thread fields (one per thread in the group) */
 
+	char *extra_counters_storage;   /* storage for extra_counters */
 	EXTRA_COUNTERS(extra_counters);
 };
 

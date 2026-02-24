@@ -305,6 +305,8 @@ struct error_snapshot {
 struct proxy_per_tgroup {
 	struct queue queue;
 	struct lbprm_per_tgrp lbprm;
+	char *extra_counters_fe_storage;        /* storage for extra_counters_fe */
+	char *extra_counters_be_storage;        /* storage for extra_counters_be */
 } THREAD_ALIGNED();
 
 struct proxy {

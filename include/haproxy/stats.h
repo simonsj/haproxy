@@ -168,7 +168,7 @@ static inline enum stats_domain_px_cap stats_px_get_cap(uint32_t domain)
 }
 
 int stats_allocate_proxy_counters_internal(struct extra_counters **counters,
-                                           int type, int px_cap);
+                                           int type, int px_cap, char **storage);
 int stats_allocate_proxy_counters(struct proxy *px);
 
 void stats_register_module(struct stats_module *m);
