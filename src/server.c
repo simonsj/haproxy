@@ -6227,18 +6227,6 @@ static int cli_parse_add_server(char **args, char *payload, struct appctx *appct
 		}
 	}
 
-	if (!srv_alloc_lb(srv, be)) {
-		ha_alert("Failed to initialize load-balancing data.\n");
-		goto out;
-	}
-
-	if (!stats_allocate_proxy_counters_internal(&srv->extra_counters,
-	                                            COUNTERS_SV,
-	                                            STATS_PX_CAP_SRV)) {
-		ha_alert("failed to allocate extra counters for server.\n");
-		goto out;
-	}
-
 	/* ensure minconn/maxconn consistency */
 	srv_minmax_conn_apply(srv);
 
@@ -6289,6 +6277,19 @@ static int cli_parse_add_server(char **args, char *payload, struct appctx *appct
 	errcode = srv_preinit(srv);
 	if (errcode)
 		goto out;
+
+	if (!srv_alloc_lb(srv, be)) {
+		ha_alert("Failed to initialize load-balancing data.\n");
+		goto out;
+	}
+
+	if (!stats_allocate_proxy_counters_internal(&srv->extra_counters,
+	                                            COUNTERS_SV,
+	                                            STATS_PX_CAP_SRV)) {
+		ha_alert("failed to allocate extra counters for server.\n");
+		goto out;
+	}
+
 	errcode = srv_postinit(srv);
 	if (errcode)
 		goto out;
