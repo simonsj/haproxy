@@ -134,7 +134,7 @@ static int resolv_fill_stats(struct stats_module *mod, struct extra_counters *ct
 		if (!ctr)
 			goto store_metric;
 
-		counters = EXTRA_COUNTERS_GET(ctr, mod);
+		counters = EXTRA_COUNTERS_BASE(ctr, mod);
 
 		switch (current_field) {
 		case RSLV_STAT_ID:

@@ -104,6 +104,12 @@ void counters_be_shared_drop(struct be_counters_shared *counters);
 })
 
 /* Manipulation of extra_counters, for boot-time registrable modules */
+/* retrieve the base storage of extra counters (first tgroup if any) */
+#define EXTRA_COUNTERS_BASE(counters, mod) \
+	(likely(counters) ? \
+		((void *)(*(counters)->datap + (mod)->counters_off[(counters)->type])) : \
+		(trash_counters))
+
 #define EXTRA_COUNTERS_GET(counters, mod) \
 	(likely(counters) ? \
 		((void *)(*(counters)->datap + (mod)->counters_off[(counters)->type])) : \

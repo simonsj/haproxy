@@ -284,7 +284,7 @@ static int h1_fill_stats(struct stats_module *mod, struct extra_counters *ctr,
 		if (!ctr)
 			goto store_metric;
 
-		counters = EXTRA_COUNTERS_GET(ctr, mod);
+		counters = EXTRA_COUNTERS_BASE(ctr, mod);
 
 		switch (current_field) {
 		case H1_ST_OPEN_CONN:
