@@ -128,27 +128,44 @@ void counters_be_shared_drop(struct be_counters_shared *counters);
 		_ctr->size += (csize);                         \
 	} while (0)
 
-#define EXTRA_COUNTERS_ALLOC(counters, alloc_failed_label) \
-	do {                                               \
-		typeof(counters) _ctr = (counters);        \
-		*_ctr->datap = malloc((_ctr)->size);       \
-		if (!*_ctr->datap)                         \
-			goto alloc_failed_label;           \
+#define EXTRA_COUNTERS_ALLOC(counters, alloc_failed_label, nbtg)	\
+	do {                                                   \
+		typeof(counters) _ctr = (counters);            \
+		char **datap = _ctr->datap;                    \
+		uint tgrp;                                     \
+		_ctr->nbtgrp = _ctr->tgrp_step ? (nbtg) : 1;   \
+		for (tgrp = 0; tgrp < _ctr->nbtgrp; tgrp++) {  \
+			*datap = malloc((_ctr)->size);         \
+			if (!*_ctr->datap)                     \
+				goto alloc_failed_label;       \
+			datap += _ctr->tgrp_step;              \
+		}                                              \
 	} while (0)
 
 #define EXTRA_COUNTERS_INIT(counters, mod, init_counters, init_counters_size) \
 	do {                                                                  \
-		typeof(counters) _ctr = (counters);                           \
-		memcpy(*_ctr->datap + mod->counters_off[_ctr->type],          \
-		       (init_counters), (init_counters_size));                \
+		typeof(counters) _ctr = (counters);                    \
+		char **datap = _ctr->datap;                            \
+		uint tgrp;                                             \
+		for (tgrp = 0; tgrp < _ctr->nbtgrp; tgrp++) {          \
+			memcpy(*datap + mod->counters_off[_ctr->type], \
+			       (init_counters), (init_counters_size)); \
+			datap += _ctr->tgrp_step;                      \
+		}                                                      \
 	} while (0)
 
-#define EXTRA_COUNTERS_FREE(counters)           \
-	do {                                    \
-		if (counters) {                 \
-			ha_free((counters)->datap);\
-			free(counters);         \
-		}                               \
+#define EXTRA_COUNTERS_FREE(counters)                                  \
+	do {                                                           \
+		typeof(counters) _ctr = (counters);                    \
+		if (_ctr) {                                            \
+			char **datap = _ctr->datap;                    \
+			uint tgrp;                                     \
+			for (tgrp = 0; tgrp < _ctr->nbtgrp; tgrp++) {  \
+				ha_free(datap);                        \
+				datap += _ctr->tgrp_step;              \
+			}                                              \
+			free(_ctr);                                    \
+		}                                                      \
 	} while (0)
 
 #endif /* _HAPROXY_COUNTERS_H */

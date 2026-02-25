@@ -1108,7 +1108,7 @@ int stats_allocate_proxy_counters_internal(struct extra_counters **counters,
 		EXTRA_COUNTERS_ADD(mod, *counters, mod->counters, mod->counters_size);
 	}
 
-	EXTRA_COUNTERS_ALLOC(*counters, alloc_failed);
+	EXTRA_COUNTERS_ALLOC(*counters, alloc_failed, global.nbtgroups);
 
 	list_for_each_entry(mod, &stats_module_list[STATS_DOMAIN_PROXY], list) {
 		if (!(stats_px_get_cap(mod->domain_flags) & px_cap))

@@ -2915,7 +2915,7 @@ int resolv_allocate_counters(struct list *stat_modules)
 				                   mod->counters_size);
 			}
 
-			EXTRA_COUNTERS_ALLOC(ns->extra_counters, alloc_failed);
+			EXTRA_COUNTERS_ALLOC(ns->extra_counters, alloc_failed, 1);
 
 			list_for_each_entry(mod, stat_modules, list) {
 				memcpy(*ns->extra_counters->datap + mod->counters_off[ns->extra_counters->type],
