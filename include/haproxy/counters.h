@@ -110,9 +110,13 @@ void counters_be_shared_drop(struct be_counters_shared *counters);
 		((void *)(*(counters)->datap + (mod)->counters_off[(counters)->type])) : \
 		(trash_counters))
 
+/* retrieve the pointer to the extra counters storage for module <mod> for the
+ * current TGID.
+ */
 #define EXTRA_COUNTERS_GET(counters, mod) \
 	(likely(counters) ? \
-		((void *)(*(counters)->datap + (mod)->counters_off[(counters)->type])) : \
+		((void *)(counters)->datap[(counters)->tgrp_step * (tgid - 1)] +    \
+	         (mod)->counters_off[(counters)->type]) : \
 		(trash_counters))
 
 #define EXTRA_COUNTERS_REGISTER(counters, ctype, alloc_failed_label, storage, step) \
