@@ -387,43 +387,43 @@ static int h2_fill_stats(struct stats_module *mod, struct extra_counters *ctr,
 
 		switch (current_field) {
 		case H2_ST_HEADERS_RCVD:
-			metric = mkf_u64(FN_COUNTER, counters->headers_rcvd);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->headers_rcvd));
 			break;
 		case H2_ST_DATA_RCVD:
-			metric = mkf_u64(FN_COUNTER, counters->data_rcvd);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->data_rcvd));
 			break;
 		case H2_ST_SETTINGS_RCVD:
-			metric = mkf_u64(FN_COUNTER, counters->settings_rcvd);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->settings_rcvd));
 			break;
 		case H2_ST_RST_STREAM_RCVD:
-			metric = mkf_u64(FN_COUNTER, counters->rst_stream_rcvd);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->rst_stream_rcvd));
 			break;
 		case H2_ST_GOAWAY_RCVD:
-			metric = mkf_u64(FN_COUNTER, counters->goaway_rcvd);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->goaway_rcvd));
 			break;
 		case H2_ST_CONN_PROTO_ERR:
-			metric = mkf_u64(FN_COUNTER, counters->conn_proto_err);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->conn_proto_err));
 			break;
 		case H2_ST_STRM_PROTO_ERR:
-			metric = mkf_u64(FN_COUNTER, counters->strm_proto_err);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->strm_proto_err));
 			break;
 		case H2_ST_RST_STREAM_RESP:
-			metric = mkf_u64(FN_COUNTER, counters->rst_stream_resp);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->rst_stream_resp));
 			break;
 		case H2_ST_GOAWAY_RESP:
-			metric = mkf_u64(FN_COUNTER, counters->goaway_resp);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->goaway_resp));
 			break;
 		case H2_ST_OPEN_CONN:
-			metric = mkf_u64(FN_GAUGE,   counters->open_conns);
+			metric = mkf_u64(FN_GAUGE,   EXTRA_COUNTERS_AGGR(ctr, counters->open_conns));
 			break;
 		case H2_ST_OPEN_STREAM:
-			metric = mkf_u64(FN_GAUGE,   counters->open_streams);
+			metric = mkf_u64(FN_GAUGE,   EXTRA_COUNTERS_AGGR(ctr, counters->open_streams));
 			break;
 		case H2_ST_TOTAL_CONN:
-			metric = mkf_u64(FN_COUNTER, counters->total_conns);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->total_conns));
 			break;
 		case H2_ST_TOTAL_STREAM:
-			metric = mkf_u64(FN_COUNTER, counters->total_streams);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->total_streams));
 			break;
 		default:
 			/* not used for frontends. If a specific metric

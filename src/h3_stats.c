@@ -146,89 +146,89 @@ static int h3_fill_stats(struct stats_module *mod, struct extra_counters *ctr,
 		switch (current_field) {
 		/* h3 frame type counters */
 		case H3_ST_DATA:
-			metric = mkf_u64(FN_COUNTER, counters->h3_data);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->h3_data));
 			break;
 		case H3_ST_HEADERS:
-			metric = mkf_u64(FN_COUNTER, counters->h3_headers);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->h3_headers));
 			break;
 		case H3_ST_CANCEL_PUSH:
-			metric = mkf_u64(FN_COUNTER, counters->h3_cancel_push);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->h3_cancel_push));
 			break;
 		case H3_ST_PUSH_PROMISE:
-			metric = mkf_u64(FN_COUNTER, counters->h3_push_promise);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->h3_push_promise));
 			break;
 		case H3_ST_MAX_PUSH_ID:
-			metric = mkf_u64(FN_COUNTER, counters->h3_max_push_id);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->h3_max_push_id));
 			break;
 		case H3_ST_GOAWAY:
-			metric = mkf_u64(FN_COUNTER, counters->h3_goaway);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->h3_goaway));
 			break;
 		case H3_ST_SETTINGS:
-			metric = mkf_u64(FN_COUNTER, counters->h3_settings);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->h3_settings));
 			break;
 
 		/* h3 error counters */
 		case H3_ST_H3_NO_ERROR:
-			metric = mkf_u64(FN_COUNTER, counters->h3_no_error);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->h3_no_error));
 			break;
 		case H3_ST_H3_GENERAL_PROTOCOL_ERROR:
-			metric = mkf_u64(FN_COUNTER, counters->h3_general_protocol_error);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->h3_general_protocol_error));
 			break;
 		case H3_ST_H3_INTERNAL_ERROR:
-			metric = mkf_u64(FN_COUNTER, counters->h3_internal_error);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->h3_internal_error));
 			break;
 		case H3_ST_H3_STREAM_CREATION_ERROR:
-			metric = mkf_u64(FN_COUNTER, counters->h3_stream_creation_error);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->h3_stream_creation_error));
 			break;
 		case H3_ST_H3_CLOSED_CRITICAL_STREAM:
-			metric = mkf_u64(FN_COUNTER, counters->h3_closed_critical_stream);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->h3_closed_critical_stream));
 			break;
 		case H3_ST_H3_FRAME_UNEXPECTED:
-			metric = mkf_u64(FN_COUNTER, counters->h3_frame_unexpected);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->h3_frame_unexpected));
 			break;
 		case H3_ST_H3_FRAME_ERROR:
-			metric = mkf_u64(FN_COUNTER, counters->h3_frame_error);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->h3_frame_error));
 			break;
 		case H3_ST_H3_EXCESSIVE_LOAD:
-			metric = mkf_u64(FN_COUNTER, counters->h3_excessive_load);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->h3_excessive_load));
 			break;
 		case H3_ST_H3_ID_ERROR:
-			metric = mkf_u64(FN_COUNTER, counters->h3_id_error);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->h3_id_error));
 			break;
 		case H3_ST_H3_SETTINGS_ERROR:
-			metric = mkf_u64(FN_COUNTER, counters->h3_settings_error);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->h3_settings_error));
 			break;
 		case H3_ST_H3_MISSING_SETTINGS:
-			metric = mkf_u64(FN_COUNTER, counters->h3_missing_settings);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->h3_missing_settings));
 			break;
 		case H3_ST_H3_REQUEST_REJECTED:
-			metric = mkf_u64(FN_COUNTER, counters->h3_request_rejected);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->h3_request_rejected));
 			break;
 		case H3_ST_H3_REQUEST_CANCELLED:
-			metric = mkf_u64(FN_COUNTER, counters->h3_request_cancelled);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->h3_request_cancelled));
 			break;
 		case H3_ST_H3_REQUEST_INCOMPLETE:
-			metric = mkf_u64(FN_COUNTER, counters->h3_request_incomplete);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->h3_request_incomplete));
 			break;
 		case H3_ST_H3_MESSAGE_ERROR:
-			metric = mkf_u64(FN_COUNTER, counters->h3_message_error);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->h3_message_error));
 			break;
 		case H3_ST_H3_CONNECT_ERROR:
-			metric = mkf_u64(FN_COUNTER, counters->h3_connect_error);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->h3_connect_error));
 			break;
 		case H3_ST_H3_VERSION_FALLBACK:
-			metric = mkf_u64(FN_COUNTER, counters->h3_version_fallback);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->h3_version_fallback));
 			break;
 
 		/* QPACK error counters */
 		case H3_ST_QPACK_DECOMPRESSION_FAILED:
-			metric = mkf_u64(FN_COUNTER, counters->qpack_decompression_failed);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->qpack_decompression_failed));
 			break;
 		case H3_ST_QPACK_ENCODER_STREAM_ERROR:
-			metric = mkf_u64(FN_COUNTER, counters->qpack_encoder_stream_error);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->qpack_encoder_stream_error));
 			break;
 		case H3_ST_QPACK_DECODER_STREAM_ERROR:
-			metric = mkf_u64(FN_COUNTER, counters->qpack_decoder_stream_error);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->qpack_decoder_stream_error));
 			break;
 		default:
 			/* not used for frontends. If a specific metric

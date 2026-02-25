@@ -288,29 +288,29 @@ static int h1_fill_stats(struct stats_module *mod, struct extra_counters *ctr,
 
 		switch (current_field) {
 		case H1_ST_OPEN_CONN:
-			metric = mkf_u64(FN_GAUGE,   counters->open_conns);
+			metric = mkf_u64(FN_GAUGE,   EXTRA_COUNTERS_AGGR(ctr, counters->open_conns));
 			break;
 		case H1_ST_OPEN_STREAM:
-			metric = mkf_u64(FN_GAUGE,   counters->open_streams);
+			metric = mkf_u64(FN_GAUGE,   EXTRA_COUNTERS_AGGR(ctr, counters->open_streams));
 			break;
 		case H1_ST_TOTAL_CONN:
-			metric = mkf_u64(FN_COUNTER, counters->total_conns);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->total_conns));
 			break;
 		case H1_ST_TOTAL_STREAM:
-			metric = mkf_u64(FN_COUNTER, counters->total_streams);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->total_streams));
 			break;
 		case H1_ST_BYTES_IN:
-			metric = mkf_u64(FN_COUNTER, counters->bytes_in);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->bytes_in));
 			break;
 		case H1_ST_BYTES_OUT:
-			metric = mkf_u64(FN_COUNTER, counters->bytes_out);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->bytes_out));
 			break;
 #if defined(USE_LINUX_SPLICE)
 		case H1_ST_SPLICED_BYTES_IN:
-			metric = mkf_u64(FN_COUNTER, counters->spliced_bytes_in);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->spliced_bytes_in));
 			break;
 		case H1_ST_SPLICED_BYTES_OUT:
-			metric = mkf_u64(FN_COUNTER, counters->spliced_bytes_out);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->spliced_bytes_out));
 			break;
 #endif
 		default:

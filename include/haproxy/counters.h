@@ -174,4 +174,25 @@ void counters_be_shared_drop(struct be_counters_shared *counters);
 		}                                                      \
 	} while (0)
 
+/* aggregate all values of <metricp> over the thread groups handled by
+ * <counters>. <metricp> MUST correspond to an entry of the first tgrp of
+ * <counters>. The number of groups and the step are found in <counters>. The
+ * type of the return value is the same as <metricp>, and must be a scalar so
+ * that values are summed before being returned.
+ */
+#define EXTRA_COUNTERS_AGGR(counters, metricp)                         \
+	({                                                             \
+		typeof(counters) _ctr = (counters);                    \
+		typeof(metricp) *valp, _ret = 0;                       \
+		if (_ctr) {                                            \
+			size_t ofs = (char *)&metricp - _ctr->datap[0]; \
+			uint tgrp;                                     \
+			for (tgrp = 0; tgrp < _ctr->nbtgrp; tgrp++) {  \
+				valp = (typeof(valp))(_ctr->datap[tgrp * (counters)->tgrp_step] + ofs); \
+				_ret += HA_ATOMIC_LOAD(valp);          \
+			}                                              \
+		}                                                      \
+		_ret;                                                  \
+	})
+
 #endif /* _HAPROXY_COUNTERS_H */

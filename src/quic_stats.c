@@ -108,133 +108,133 @@ static int quic_fill_stats(struct stats_module *mod, struct extra_counters *ctr,
 
 		switch (current_field) {
 		case QUIC_ST_RXBUF_FULL:
-			metric = mkf_u64(FN_COUNTER, counters->rxbuf_full);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->rxbuf_full));
 			break;
 		case QUIC_ST_DROPPED_PACKET:
-			metric = mkf_u64(FN_COUNTER, counters->dropped_pkt);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->dropped_pkt));
 			break;
 		case QUIC_ST_DROPPED_PACKET_BUFOVERRUN:
-			metric = mkf_u64(FN_COUNTER, counters->dropped_pkt_bufoverrun);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->dropped_pkt_bufoverrun));
 			break;
 		case QUIC_ST_DROPPED_PARSING:
-			metric = mkf_u64(FN_COUNTER, counters->dropped_parsing);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->dropped_parsing));
 			break;
 		case QUIC_ST_SOCKET_FULL:
-			metric = mkf_u64(FN_COUNTER, counters->socket_full);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->socket_full));
 			break;
 		case QUIC_ST_SENDTO_ERR:
-			metric = mkf_u64(FN_COUNTER, counters->sendto_err);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->sendto_err));
 			break;
 		case QUIC_ST_SENDTO_ERR_UNKNWN:
-			metric = mkf_u64(FN_COUNTER, counters->sendto_err_unknown);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->sendto_err_unknown));
 			break;
 		case QUIC_ST_SENT_PACKET:
-			metric = mkf_u64(FN_COUNTER, counters->sent_pkt);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->sent_pkt));
 			break;
 		case QUIC_ST_LOST_PACKET:
-			metric = mkf_u64(FN_COUNTER, counters->lost_pkt);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->lost_pkt));
 			break;
 		case QUIC_ST_TOO_SHORT_INITIAL_DGRAM:
-			metric = mkf_u64(FN_COUNTER, counters->too_short_initial_dgram);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->too_short_initial_dgram));
 			break;
 		case QUIC_ST_RETRY_SENT:
-			metric = mkf_u64(FN_COUNTER, counters->retry_sent);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->retry_sent));
 			break;
 		case QUIC_ST_RETRY_VALIDATED:
-			metric = mkf_u64(FN_COUNTER, counters->retry_validated);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->retry_validated));
 			break;
 		case QUIC_ST_RETRY_ERRORS:
-			metric = mkf_u64(FN_COUNTER, counters->retry_error);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->retry_error));
 			break;
 		case QUIC_ST_HALF_OPEN_CONN:
-			metric = mkf_u64(FN_GAUGE, counters->half_open_conn);
+			metric = mkf_u64(FN_GAUGE, EXTRA_COUNTERS_AGGR(ctr, counters->half_open_conn));
 			break;
 		case QUIC_ST_HDSHK_FAIL:
-			metric = mkf_u64(FN_COUNTER, counters->hdshk_fail);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->hdshk_fail));
 			break;
 		case QUIC_ST_STATELESS_RESET_SENT:
-			metric = mkf_u64(FN_COUNTER, counters->stateless_reset_sent);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->stateless_reset_sent));
 			break;
 
 		/* Special events of interest */
 		case QUIC_ST_CONN_MIGRATION_DONE:
-			metric = mkf_u64(FN_COUNTER, counters->conn_migration_done);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->conn_migration_done));
 			break;
 
 		/* Transport errors */
 		case QUIC_ST_TRANSP_ERR_NO_ERROR:
-			metric = mkf_u64(FN_COUNTER, counters->quic_transp_err_no_error);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->quic_transp_err_no_error));
 			break;
 		case QUIC_ST_TRANSP_ERR_INTERNAL_ERROR:
-			metric = mkf_u64(FN_COUNTER, counters->quic_transp_err_internal_error);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->quic_transp_err_internal_error));
 			break;
 		case QUIC_ST_TRANSP_ERR_CONNECTION_REFUSED:
-			metric = mkf_u64(FN_COUNTER, counters->quic_transp_err_connection_refused);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->quic_transp_err_connection_refused));
 			break;
 		case QUIC_ST_TRANSP_ERR_FLOW_CONTROL_ERROR:
-			metric = mkf_u64(FN_COUNTER, counters->quic_transp_err_flow_control_error);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->quic_transp_err_flow_control_error));
 			break;
 		case QUIC_ST_TRANSP_ERR_STREAM_LIMIT_ERROR:
-			metric = mkf_u64(FN_COUNTER, counters->quic_transp_err_stream_limit_error);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->quic_transp_err_stream_limit_error));
 			break;
 		case QUIC_ST_TRANSP_ERR_STREAM_STATE_ERROR:
-			metric = mkf_u64(FN_COUNTER, counters->quic_transp_err_stream_state_error);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->quic_transp_err_stream_state_error));
 			break;
 		case QUIC_ST_TRANSP_ERR_FINAL_SIZE_ERROR:
-			metric = mkf_u64(FN_COUNTER, counters->quic_transp_err_final_size_error);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->quic_transp_err_final_size_error));
 			break;
 		case QUIC_ST_TRANSP_ERR_FRAME_ENCODING_ERROR:
-			metric = mkf_u64(FN_COUNTER, counters->quic_transp_err_frame_encoding_error);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->quic_transp_err_frame_encoding_error));
 			break;
 		case QUIC_ST_TRANSP_ERR_TRANSPORT_PARAMETER_ERROR:
-			metric = mkf_u64(FN_COUNTER, counters->quic_transp_err_transport_parameter_error);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->quic_transp_err_transport_parameter_error));
 			break;
 		case QUIC_ST_TRANSP_ERR_CONNECTION_ID_LIMIT_ERROR:
-			metric = mkf_u64(FN_COUNTER, counters->quic_transp_err_connection_id_limit);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->quic_transp_err_connection_id_limit));
 			break;
 		case QUIC_ST_TRANSP_ERR_PROTOCOL_VIOLATION:
-			metric = mkf_u64(FN_COUNTER, counters->quic_transp_err_protocol_violation);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->quic_transp_err_protocol_violation));
 			break;
 		case QUIC_ST_TRANSP_ERR_INVALID_TOKEN:
-			metric = mkf_u64(FN_COUNTER, counters->quic_transp_err_invalid_token);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->quic_transp_err_invalid_token));
 			break;
 		case QUIC_ST_TRANSP_ERR_APPLICATION_ERROR:
-			metric = mkf_u64(FN_COUNTER, counters->quic_transp_err_application_error);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->quic_transp_err_application_error));
 			break;
 		case QUIC_ST_TRANSP_ERR_CRYPTO_BUFFER_EXCEEDED:
-			metric = mkf_u64(FN_COUNTER, counters->quic_transp_err_crypto_buffer_exceeded);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->quic_transp_err_crypto_buffer_exceeded));
 			break;
 		case QUIC_ST_TRANSP_ERR_KEY_UPDATE_ERROR:
-			metric = mkf_u64(FN_COUNTER, counters->quic_transp_err_key_update_error);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->quic_transp_err_key_update_error));
 			break;
 		case QUIC_ST_TRANSP_ERR_AEAD_LIMIT_REACHED:
-			metric = mkf_u64(FN_COUNTER, counters->quic_transp_err_aead_limit_reached);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->quic_transp_err_aead_limit_reached));
 			break;
 		case QUIC_ST_TRANSP_ERR_NO_VIABLE_PATH:
-			metric = mkf_u64(FN_COUNTER, counters->quic_transp_err_no_viable_path);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->quic_transp_err_no_viable_path));
 			break;
 		case QUIC_ST_TRANSP_ERR_CRYPTO_ERROR:
-			metric = mkf_u64(FN_COUNTER, counters->quic_transp_err_crypto_error);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->quic_transp_err_crypto_error));
 			break;
 		case QUIC_ST_TRANSP_ERR_UNKNOWN_ERROR:
-			metric = mkf_u64(FN_COUNTER, counters->quic_transp_err_unknown_error);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->quic_transp_err_unknown_error));
 			break;
 
 		/* Streams related counters */
 		case QUIC_ST_DATA_BLOCKED:
-			metric = mkf_u64(FN_COUNTER, counters->data_blocked);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->data_blocked));
 			break;
 		case QUIC_ST_STREAM_DATA_BLOCKED:
-			metric = mkf_u64(FN_COUNTER, counters->stream_data_blocked);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->stream_data_blocked));
 			break;
 		case QUIC_ST_STREAMS_BLOCKED_BIDI:
-			metric = mkf_u64(FN_COUNTER, counters->streams_blocked_bidi);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->streams_blocked_bidi));
 			break;
 		case QUIC_ST_STREAMS_BLOCKED_UNI:
-			metric = mkf_u64(FN_COUNTER, counters->streams_blocked_uni);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->streams_blocked_uni));
 			break;
 		case QUIC_ST_NCBUF_GAP_LIMIT:
-			metric = mkf_u64(FN_COUNTER, counters->ncbuf_gap_limit);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->ncbuf_gap_limit));
 			break;
 		default:
 			/* not used for frontends. If a specific metric

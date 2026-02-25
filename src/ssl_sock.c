@@ -210,19 +210,19 @@ static int ssl_fill_stats(struct stats_module *mod, struct extra_counters *ctr,
 
 		switch (current_field) {
 		case SSL_ST_SESS:
-			metric = mkf_u64(FN_COUNTER, counters->sess);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->sess));
 			break;
 		case SSL_ST_REUSED_SESS:
-			metric = mkf_u64(FN_COUNTER, counters->reused_sess);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->reused_sess));
 			break;
 		case SSL_ST_FAILED_HANDSHAKE:
-			metric = mkf_u64(FN_COUNTER, counters->failed_handshake);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->failed_handshake));
 			break;
 		case SSL_ST_OCSP_STAPLE:
-			metric = mkf_u64(FN_COUNTER, counters->ocsp_staple);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->ocsp_staple));
 			break;
 		case SSL_ST_FAILED_OCSP_STAPLE:
-			metric = mkf_u64(FN_COUNTER, counters->failed_ocsp_staple);
+			metric = mkf_u64(FN_COUNTER, EXTRA_COUNTERS_AGGR(ctr, counters->failed_ocsp_staple));
 			break;
 
 		default:
