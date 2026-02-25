@@ -275,11 +275,16 @@ static struct h1_counters {
 static int h1_fill_stats(struct stats_module *mod, struct extra_counters *ctr,
                          struct field *stats, unsigned int *selected_field)
 {
-	struct h1_counters *counters = EXTRA_COUNTERS_GET(ctr, mod);
 	unsigned int current_field = (selected_field != NULL ? *selected_field : 0);
 
 	for (; current_field < H1_STATS_COUNT; current_field++) {
 		struct field metric = { 0 };
+		struct h1_counters *counters;
+
+		if (!ctr)
+			goto store_metric;
+
+		counters = EXTRA_COUNTERS_GET(ctr, mod);
 
 		switch (current_field) {
 		case H1_ST_OPEN_CONN:
@@ -316,6 +321,7 @@ static int h1_fill_stats(struct stats_module *mod, struct extra_counters *ctr,
 				return 0;
 			continue;
 		}
+	store_metric:
 		stats[current_field] = metric;
 		if (selected_field != NULL)
 			break;

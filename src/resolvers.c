@@ -125,11 +125,16 @@ static struct dns_counters dns_counters;
 static int resolv_fill_stats(struct stats_module *mod, struct extra_counters *ctr,
                              struct field *stats, unsigned int *selected_field)
 {
-	struct dns_counters *counters = EXTRA_COUNTERS_GET(ctr, mod);
 	unsigned int current_field = (selected_field != NULL ? *selected_field : 0);
 
 	for (; current_field < RSLV_STAT_END; current_field++) {
 		struct field metric = { 0 };
+		struct dns_counters *counters;
+
+		if (!ctr)
+			goto store_metric;
+
+		counters = EXTRA_COUNTERS_GET(ctr, mod);
 
 		switch (current_field) {
 		case RSLV_STAT_ID:
@@ -191,6 +196,7 @@ static int resolv_fill_stats(struct stats_module *mod, struct extra_counters *ct
 				return 0;
 			continue;
 		}
+	store_metric:
 		stats[current_field] = metric;
 		if (selected_field != NULL)
 			break;

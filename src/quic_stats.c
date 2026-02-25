@@ -95,11 +95,16 @@ struct quic_counters quic_counters;
 static int quic_fill_stats(struct stats_module *mod, struct extra_counters *ctr,
                            struct field *stats, unsigned int *selected_field)
 {
-	struct quic_counters *counters = EXTRA_COUNTERS_GET(ctr, mod);
 	unsigned int current_field = (selected_field != NULL ? *selected_field : 0);
 
 	for (; current_field < QUIC_STATS_COUNT; current_field++) {
 		struct field metric = { 0 };
+		struct quic_counters *counters;
+
+		if (!ctr)
+			goto store_metric;
+
+		counters = EXTRA_COUNTERS_GET(ctr, mod);
 
 		switch (current_field) {
 		case QUIC_ST_RXBUF_FULL:
@@ -239,6 +244,7 @@ static int quic_fill_stats(struct stats_module *mod, struct extra_counters *ctr,
 				return 0;
 			continue;
 		}
+	store_metric:
 		stats[current_field] = metric;
 		if (selected_field != NULL)
 			break;
