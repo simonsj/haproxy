@@ -5686,26 +5686,17 @@ int increment_sslconn()
 
 /* Try to reuse an SSL session (SSL_SESSION object) for <srv> server with <ctx>
  * as SSL socket context.
- * Return 1 if succeeded, 0 if not. Always succeeds for TCP socket. May fail
- * for QUIC sockets.
  */
 void ssl_sock_srv_try_reuse_sess(struct ssl_sock_ctx *ctx, struct server *srv)
 {
 #ifdef USE_QUIC
 	struct quic_conn *qc = ctx->qc;
-	/* Default status for QUIC sockets + 0-RTT is failure(0). The status will
-	 * be set to success(1) only if the QUIC connection parameters
-	 * (transport parameters and ALPN) are successfully reused.
-	 */
 	struct connection *conn = qc ? qc->conn : ctx->conn;
 #else
-	/* Always succeeds for TCP sockets. */
 	struct connection *conn = ctx->conn;
 #endif
 
-	/*
-	 * Always fail for check connections
-	 */
+	/* Do nothing for check connections */
 	if (conn->flags & CO_FL_SSL_NO_CACHED_INFO)
 		return;
 
