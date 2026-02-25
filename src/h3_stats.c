@@ -129,9 +129,10 @@ static struct h3_counters {
 	long long qpack_decoder_stream_error; /* total number of QPACK_DECODER_STREAM_ERROR errors received */
 } h3_counters;
 
-static int h3_fill_stats(void *data, struct field *stats, unsigned int *selected_field)
+static int h3_fill_stats(struct stats_module *mod, struct extra_counters *ctr,
+                         struct field *stats, unsigned int *selected_field)
 {
-	struct h3_counters *counters = data;
+	struct h3_counters *counters = EXTRA_COUNTERS_GET(ctr, mod);
 	unsigned int current_field = (selected_field != NULL ? *selected_field : 0);
 
 	for (; current_field < H3_STATS_COUNT; current_field++) {

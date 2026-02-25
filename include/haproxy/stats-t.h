@@ -521,8 +521,8 @@ struct stats_module {
 	struct list list;
 	const char *name;
 
-	/* functor used to generate the stats module using counters provided through data parameter */
-	int (*fill_stats)(void *data, struct field *, unsigned int *);
+	/* function used to generate the stats module using counters provided through data parameter */
+	int (*fill_stats)(struct stats_module *, struct extra_counters *, struct field *, unsigned int *);
 
 	struct stat_col *stats;  /* statistics provided by the module */
 	void *counters;          /* initial values of allocated counters */

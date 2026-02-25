@@ -122,9 +122,10 @@ static struct stat_col resolv_stats[] = {
 
 static struct dns_counters dns_counters;
 
-static int resolv_fill_stats(void *d, struct field *stats, unsigned int *selected_field)
+static int resolv_fill_stats(struct stats_module *mod, struct extra_counters *ctr,
+                             struct field *stats, unsigned int *selected_field)
 {
-	struct dns_counters *counters = d;
+	struct dns_counters *counters = EXTRA_COUNTERS_GET(ctr, mod);
 	unsigned int current_field = (selected_field != NULL ? *selected_field : 0);
 
 	for (; current_field < RSLV_STAT_END; current_field++) {
@@ -2804,9 +2805,7 @@ static int stats_dump_resolv_to_buffer(struct stconn *sc,
 	memset(stats, 0, sizeof(struct field) * stats_count);
 
 	list_for_each_entry(mod, stat_modules, list) {
-		struct counters_node *counters = EXTRA_COUNTERS_GET(ns->extra_counters, mod);
-
-		if (!mod->fill_stats(counters, stats + idx, NULL))
+		if (!mod->fill_stats(mod, ns->extra_counters, stats + idx, NULL))
 			continue;
 		idx += mod->stats_count;
 	}
@@ -4080,7 +4079,7 @@ static int rslv_promex_fill_ts(void *unused, void *metric_ctx, unsigned int id, 
 	labels[1].name  = ist("nameserver");
 	labels[1].value = ist(ns->id);
 
-	ret = resolv_fill_stats(ns->counters, stats, &id);
+	ret = resolv_fill_stats(&rslv_stats_module, ns->extra_counters, stats, &id);
 	if (ret == 1)
 		*field = stats[id];
 	return ret;

@@ -548,8 +548,6 @@ static int stats_dump_fe_line(struct stconn *sc, struct proxy *px)
 		return 0;
 
 	list_for_each_entry(mod, &stats_module_list[STATS_DOMAIN_PROXY], list) {
-		void *counters;
-
 		if (ctx->flags & STAT_F_FMT_FILE)
 			continue;
 
@@ -558,8 +556,7 @@ static int stats_dump_fe_line(struct stconn *sc, struct proxy *px)
 			continue;
 		}
 
-		counters = EXTRA_COUNTERS_GET(px->extra_counters_fe, mod);
-		if (!mod->fill_stats(counters, line + stats_count, NULL))
+		if (!mod->fill_stats(mod, px->extra_counters_fe, line + stats_count, NULL))
 			continue;
 		stats_count += mod->stats_count;
 	}
@@ -699,8 +696,6 @@ static int stats_dump_li_line(struct stconn *sc, struct proxy *px, struct listen
 		return 0;
 
 	list_for_each_entry(mod, &stats_module_list[STATS_DOMAIN_PROXY], list) {
-		void *counters;
-
 		if (ctx->flags & STAT_F_FMT_FILE)
 			continue;
 
@@ -709,8 +704,7 @@ static int stats_dump_li_line(struct stconn *sc, struct proxy *px, struct listen
 			continue;
 		}
 
-		counters = EXTRA_COUNTERS_GET(l->extra_counters, mod);
-		if (!mod->fill_stats(counters, line + stats_count, NULL))
+		if (!mod->fill_stats(mod, l->extra_counters, line + stats_count, NULL))
 			continue;
 		stats_count += mod->stats_count;
 	}
@@ -1137,8 +1131,6 @@ static int stats_dump_sv_line(struct stconn *sc, struct proxy *px, struct server
 		return 0;
 
 	list_for_each_entry(mod, &stats_module_list[STATS_DOMAIN_PROXY], list) {
-		void *counters;
-
 		if (ctx->flags & STAT_F_FMT_FILE)
 			continue;
 
@@ -1150,8 +1142,7 @@ static int stats_dump_sv_line(struct stconn *sc, struct proxy *px, struct server
 			continue;
 		}
 
-		counters = EXTRA_COUNTERS_GET(sv->extra_counters, mod);
-		if (!mod->fill_stats(counters, line + stats_count, NULL))
+		if (!mod->fill_stats(mod, sv->extra_counters, line + stats_count, NULL))
 			continue;
 		stats_count += mod->stats_count;
 	}
@@ -1378,8 +1369,6 @@ static int stats_dump_be_line(struct stconn *sc, struct proxy *px)
 		return 0;
 
 	list_for_each_entry(mod, &stats_module_list[STATS_DOMAIN_PROXY], list) {
-		struct extra_counters *counters;
-
 		if (ctx->flags & STAT_F_FMT_FILE)
 			continue;
 
@@ -1391,8 +1380,7 @@ static int stats_dump_be_line(struct stconn *sc, struct proxy *px)
 			continue;
 		}
 
-		counters = EXTRA_COUNTERS_GET(px->extra_counters_be, mod);
-		if (!mod->fill_stats(counters, line + stats_count, NULL))
+		if (!mod->fill_stats(mod, px->extra_counters_be, line + stats_count, NULL))
 			continue;
 		stats_count += mod->stats_count;
 	}

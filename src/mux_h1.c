@@ -272,9 +272,10 @@ static struct h1_counters {
 #endif
 } h1_counters;
 
-static int h1_fill_stats(void *data, struct field *stats, unsigned int *selected_field)
+static int h1_fill_stats(struct stats_module *mod, struct extra_counters *ctr,
+                         struct field *stats, unsigned int *selected_field)
 {
-	struct h1_counters *counters = data;
+	struct h1_counters *counters = EXTRA_COUNTERS_GET(ctr, mod);
 	unsigned int current_field = (selected_field != NULL ? *selected_field : 0);
 
 	for (; current_field < H1_STATS_COUNT; current_field++) {

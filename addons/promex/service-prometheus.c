@@ -626,8 +626,6 @@ static int promex_dump_front_metrics(struct appctx *appctx, struct htx *htx)
 	}
 
 	list_for_each_entry_from(mod, &stats_module_list[STATS_DOMAIN_PROXY], list) {
-		void *counters;
-
 		if (!(stats_px_get_cap(mod->domain_flags) & STATS_PX_CAP_FE))
 			continue;
 
@@ -664,8 +662,7 @@ static int promex_dump_front_metrics(struct appctx *appctx, struct htx *htx)
 				if ((px->flags & PR_FL_DISABLED) || px->uuid <= 0 || !(px->cap & PR_CAP_FE))
 					goto next_px2;
 
-				counters = EXTRA_COUNTERS_GET(px->extra_counters_fe, mod);
-				if (!mod->fill_stats(counters, stats + ctx->field_num, &ctx->mod_field_num))
+				if (!mod->fill_stats(mod, px->extra_counters_fe, stats + ctx->field_num, &ctx->mod_field_num))
 					return -1;
 
 				val = stats[ctx->field_num + ctx->mod_field_num];
@@ -817,8 +814,6 @@ static int promex_dump_listener_metrics(struct appctx *appctx, struct htx *htx)
 	}
 
 	list_for_each_entry_from(mod, &stats_module_list[STATS_DOMAIN_PROXY], list) {
-		void *counters;
-
 		if (!(stats_px_get_cap(mod->domain_flags) & STATS_PX_CAP_LI))
 			continue;
 
@@ -864,8 +859,7 @@ static int promex_dump_listener_metrics(struct appctx *appctx, struct htx *htx)
 					labels[lb_idx+1].name  = ist("mod");
 					labels[lb_idx+1].value = ist2(mod->name, strlen(mod->name));
 
-					counters = EXTRA_COUNTERS_GET(li->extra_counters, mod);
-					if (!mod->fill_stats(counters, stats + ctx->field_num, &ctx->mod_field_num))
+					if (!mod->fill_stats(mod, li->extra_counters, stats + ctx->field_num, &ctx->mod_field_num))
 						return -1;
 
 					val = stats[ctx->field_num + ctx->mod_field_num];
@@ -1113,8 +1107,6 @@ static int promex_dump_back_metrics(struct appctx *appctx, struct htx *htx)
 	}
 
 	list_for_each_entry_from(mod, &stats_module_list[STATS_DOMAIN_PROXY], list) {
-		void *counters;
-
 		if (!(stats_px_get_cap(mod->domain_flags) & STATS_PX_CAP_BE))
 			continue;
 
@@ -1151,8 +1143,7 @@ static int promex_dump_back_metrics(struct appctx *appctx, struct htx *htx)
 				if ((px->flags & PR_FL_DISABLED) || px->uuid <= 0 || !(px->cap & PR_CAP_BE))
 					goto next_px2;
 
-				counters = EXTRA_COUNTERS_GET(px->extra_counters_be, mod);
-				if (!mod->fill_stats(counters, stats + ctx->field_num, &ctx->mod_field_num))
+				if (!mod->fill_stats(mod, px->extra_counters_be, stats + ctx->field_num, &ctx->mod_field_num))
 					return -1;
 
 				val = stats[ctx->field_num + ctx->mod_field_num];
@@ -1420,8 +1411,6 @@ static int promex_dump_srv_metrics(struct appctx *appctx, struct htx *htx)
 	}
 
 	list_for_each_entry_from(mod, &stats_module_list[STATS_DOMAIN_PROXY], list) {
-		void *counters;
-
 		if (!(stats_px_get_cap(mod->domain_flags) & STATS_PX_CAP_SRV))
 			continue;
 
@@ -1471,8 +1460,7 @@ static int promex_dump_srv_metrics(struct appctx *appctx, struct htx *htx)
 						goto next_sv2;
 
 
-					counters = EXTRA_COUNTERS_GET(sv->extra_counters, mod);
-					if (!mod->fill_stats(counters, stats + ctx->field_num, &ctx->mod_field_num))
+					if (!mod->fill_stats(mod, sv->extra_counters, stats + ctx->field_num, &ctx->mod_field_num))
 						goto error;
 
 					val = stats[ctx->field_num + ctx->mod_field_num];

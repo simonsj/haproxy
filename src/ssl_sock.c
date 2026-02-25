@@ -194,9 +194,10 @@ static struct stat_col ssl_stats[] = {
 
 static struct ssl_counters ssl_counters;
 
-static int ssl_fill_stats(void *data, struct field *stats, unsigned int *selected_field)
+static int ssl_fill_stats(struct stats_module *mod, struct extra_counters *ctr,
+                          struct field *stats, unsigned int *selected_field)
 {
-	struct ssl_counters *counters = data;
+	struct ssl_counters *counters = EXTRA_COUNTERS_GET(ctr, mod);
 	unsigned int current_field = (selected_field != NULL ? *selected_field : 0);
 
 	for (; current_field < SSL_ST_STATS_COUNT; current_field++) {
