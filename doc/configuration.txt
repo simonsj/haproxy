@@ -4478,6 +4478,16 @@ tune.h2.initial-window-size <number>
   specific settings tune.h2.fe.initial-window-size and
   tune.h2.be.initial-window-size.
 
+tune.h2.log-errors { none | connection | stream }
+  Sets the level of errors in the H2 demultiplexer that will generate a log.
+  The default is "stream", which means that any decoding error encountered in
+  the demultiplexer will lead to the emission of a log. The "connection" value
+  indicates that only logs that result in invalidating the connection will
+  produce a log. Finally, "none" indicates that no decoding error will produce
+  any log. It is recommended to set at least "connection" in order to detect
+  protocol anomalies, even if this means temporarily switching to "none" during
+  difficult periods.
+
 tune.h2.max-concurrent-streams <number>
   Sets the default HTTP/2 maximum number of concurrent streams per connection
   (i.e. the number of outstanding requests on a single connection). This value
