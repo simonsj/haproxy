@@ -1315,8 +1315,7 @@ static void deinit_stats(void)
 	for (i = 0; i < STATS_DOMAIN_COUNT; ++i) {
 		const int domain = domains[i];
 
-		if (stat_cols[domain])
-			free(stat_cols[domain]);
+		free(stat_cols[domain]);
 	}
 }
 
@@ -1324,8 +1323,7 @@ REGISTER_POST_DEINIT(deinit_stats);
 
 static void free_trash_counters(void)
 {
-	if (trash_counters)
-		free(trash_counters);
+	free(trash_counters);
 }
 
 REGISTER_PER_THREAD_FREE(free_trash_counters);

@@ -1582,9 +1582,7 @@ out:
 	if (ocsp)
 		ssl_sock_free_ocsp(ocsp);
 
-	if (warn)
-		free(warn);
-
+	free(warn);
 	free(err);
 
 	return ret;

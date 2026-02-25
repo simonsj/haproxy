@@ -456,9 +456,7 @@ int cfg_parse_global(const char *file, int linenum, char **args, int kwm)
 		for (i = 1; *args[i]; i++)
 			len += strlen(args[i]) + 1;
 
-		if (global.desc)
-			free(global.desc);
-
+		free(global.desc);
 		global.desc = d = calloc(1, len);
 
 		d += snprintf(d, global.desc + len - d, "%s", args[1]);
@@ -487,9 +485,7 @@ int cfg_parse_global(const char *file, int linenum, char **args, int kwm)
 			goto out;
 		}
 
-		if (global.node)
-			free(global.node);
-
+		free(global.node);
 		global.node = strdup(args[1]);
 	}
 	else if (strcmp(args[0], "unix-bind") == 0) {

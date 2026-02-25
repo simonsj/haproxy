@@ -688,8 +688,7 @@ parse_trace_flt(char **args, int *cur_arg, struct proxy *px,
 	return 0;
 
  error:
-	if (conf->name)
-		free(conf->name);
+	free(conf->name);
 	free(conf);
 	return -1;
 }
