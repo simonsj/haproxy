@@ -109,13 +109,14 @@ void counters_be_shared_drop(struct be_counters_shared *counters);
 		((void *)(*(counters)->datap + (mod)->counters_off[(counters)->type])) : \
 		(trash_counters))
 
-#define EXTRA_COUNTERS_REGISTER(counters, ctype, alloc_failed_label, storage)	\
+#define EXTRA_COUNTERS_REGISTER(counters, ctype, alloc_failed_label, storage, step) \
 	do {                                                         \
 		typeof(*counters) _ctr;                              \
 		_ctr = calloc(1, sizeof(*_ctr));                     \
 		if (!_ctr)                                           \
 			goto alloc_failed_label;                     \
 		_ctr->type = (ctype);                                \
+		_ctr->tgrp_step = (step);                            \
 		_ctr->datap = (storage);                             \
 		*(counters) = _ctr;                                  \
 	} while (0)

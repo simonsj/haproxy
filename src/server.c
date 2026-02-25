@@ -6286,7 +6286,9 @@ static int cli_parse_add_server(char **args, char *payload, struct appctx *appct
 	if (!stats_allocate_proxy_counters_internal(&srv->extra_counters,
 	                                            COUNTERS_SV,
 	                                            STATS_PX_CAP_SRV,
-	                                            &srv->per_tgrp->extra_counters_storage)) {
+	                                            &srv->per_tgrp->extra_counters_storage,
+	                                            &srv->per_tgrp[1].extra_counters_storage -
+	                                            &srv->per_tgrp[0].extra_counters_storage)) {
 		ha_alert("failed to allocate extra counters for server.\n");
 		goto out;
 	}

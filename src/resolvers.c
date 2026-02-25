@@ -2906,7 +2906,7 @@ int resolv_allocate_counters(struct list *stat_modules)
 	list_for_each_entry(resolvers, &sec_resolvers, list) {
 		list_for_each_entry(ns, &resolvers->nameservers, list) {
 			EXTRA_COUNTERS_REGISTER(&ns->extra_counters, COUNTERS_RSLV,
-			                        alloc_failed, &ns->extra_counters_storage);
+			                        alloc_failed, &ns->extra_counters_storage, 0);
 
 			list_for_each_entry(mod, stat_modules, list) {
 				EXTRA_COUNTERS_ADD(mod,

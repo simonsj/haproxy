@@ -199,6 +199,7 @@ enum counters_type {
 struct extra_counters {
 	char **datap; /* points to pointer to heap containing counters allocated in a linear fashion */
 	size_t size; /* size of allocated data */
+	size_t tgrp_step; /* distance in words between two datap for consecutive tgroups, 0 for single */
 	enum counters_type type; /* type of object containing the counters */
 };
 

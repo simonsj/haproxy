@@ -1094,11 +1094,12 @@ static void cli_io_handler_release_dump_stat_file(struct appctx *appctx)
 }
 
 int stats_allocate_proxy_counters_internal(struct extra_counters **counters,
-                                           int type, int px_cap, char **storage)
+                                           int type, int px_cap,
+                                           char **storage, size_t step)
 {
 	struct stats_module *mod;
 
-	EXTRA_COUNTERS_REGISTER(counters, type, alloc_failed, storage);
+	EXTRA_COUNTERS_REGISTER(counters, type, alloc_failed, storage, step);
 
 	list_for_each_entry(mod, &stats_module_list[STATS_DOMAIN_PROXY], list) {
 		if (!(stats_px_get_cap(mod->domain_flags) & px_cap))
@@ -1134,7 +1135,9 @@ int stats_allocate_proxy_counters(struct proxy *px)
 		if (!stats_allocate_proxy_counters_internal(&px->extra_counters_fe,
 		                                            COUNTERS_FE,
 		                                            STATS_PX_CAP_FE,
-		                                            &px->per_tgrp->extra_counters_fe_storage)) {
+		                                            &px->per_tgrp->extra_counters_fe_storage,
+		                                            &px->per_tgrp[1].extra_counters_fe_storage -
+		                                            &px->per_tgrp[0].extra_counters_fe_storage)) {
 			return 0;
 		}
 	}
@@ -1143,7 +1146,9 @@ int stats_allocate_proxy_counters(struct proxy *px)
 		if (!stats_allocate_proxy_counters_internal(&px->extra_counters_be,
 		                                            COUNTERS_BE,
 		                                            STATS_PX_CAP_BE,
-		                                            &px->per_tgrp->extra_counters_be_storage)) {
+		                                            &px->per_tgrp->extra_counters_be_storage,
+		                                            &px->per_tgrp[1].extra_counters_be_storage -
+		                                            &px->per_tgrp[0].extra_counters_be_storage)) {
 			return 0;
 		}
 	}
@@ -1152,7 +1157,9 @@ int stats_allocate_proxy_counters(struct proxy *px)
 		if (!stats_allocate_proxy_counters_internal(&sv->extra_counters,
 		                                            COUNTERS_SV,
 		                                            STATS_PX_CAP_SRV,
-		                                            &sv->per_tgrp->extra_counters_storage)) {
+		                                            &sv->per_tgrp->extra_counters_storage,
+		                                            &sv->per_tgrp[1].extra_counters_storage -
+		                                            &sv->per_tgrp[0].extra_counters_storage)) {
 			return 0;
 		}
 	}
@@ -1161,7 +1168,7 @@ int stats_allocate_proxy_counters(struct proxy *px)
 		if (!stats_allocate_proxy_counters_internal(&li->extra_counters,
 		                                            COUNTERS_LI,
 		                                            STATS_PX_CAP_LI,
-		                                            &li->extra_counters_storage)) {
+		                                            &li->extra_counters_storage, 0)) {
 			return 0;
 		}
 	}
