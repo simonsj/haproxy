@@ -3514,6 +3514,7 @@ static struct h2s *h2c_frt_handle_headers(struct h2c *h2c, struct h2s *h2s)
 		error = h2c_dec_hdrs(h2c, &rxbuf, &flags, &body_len, NULL);
 		sess_log(h2c->conn->owner);
 		h2s = (struct h2s*)h2_error_stream;
+		h2c_report_glitch(h2c, 1, "rcvd H2 trailers on closed stream");
 		TRACE_USER("rcvd H2 trailers on closed stream", H2_EV_RX_FRAME|H2_EV_RX_HDR|H2_EV_STRM_NEW|H2_EV_STRM_END, h2c->conn, h2s, &rxbuf);
 		goto send_rst;
 	}
@@ -6312,6 +6313,7 @@ next_frame:
 
 	/* Trailers terminate a DATA sequence */
 	if (h2_make_htx_trailers(list, htx) <= 0) {
+		h2c_report_glitch(h2c, 1, "failed to append HTX trailers into rxbuf");
 		TRACE_STATE("failed to append HTX trailers into rxbuf", H2_EV_RX_FRAME|H2_EV_RX_HDR|H2_EV_H2S_ERR, h2c->conn);
 		htx->flags |= HTX_FL_PARSING_ERROR;
 		goto fail;
