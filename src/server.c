@@ -3253,14 +3253,14 @@ struct server *srv_drop(struct server *srv)
 			istfree(&srv->per_thr[i].quic_retry_token);
 	}
 #endif
+	EXTRA_COUNTERS_FREE(srv->extra_counters);
+
 	srv_free_params(srv);
 
 	HA_SPIN_DESTROY(&srv->lock);
 
 	MT_LIST_DELETE(&srv->global_list);
 	event_hdl_sub_list_destroy(&srv->e_subs);
-
-	EXTRA_COUNTERS_FREE(srv->extra_counters);
 
 	srv_free(&srv);
 
