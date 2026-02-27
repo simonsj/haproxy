@@ -2969,7 +2969,7 @@ static void defaults_px_free(struct proxy *defproxy)
 void defaults_px_destroy(struct proxy *px)
 {
 	BUG_ON(!(px->cap & PR_CAP_DEF));
-	BUG_ON(px->conf.refcount != 0);
+	BUG_ON(px->conf.def_ref != 0);
 
 	cebis_item_delete(&defproxy_by_name, conf.name_node, id, px);
 	LIST_DELETE(&px->el);
@@ -2979,7 +2979,7 @@ void defaults_px_destroy(struct proxy *px)
 }
 
 /* delete all unreferenced default proxies. A default proxy is unreferenced if
- * its refcount is equal to zero.
+ * its <def_ref> count is equal to zero.
  */
 void defaults_px_destroy_all_unref(void)
 {
@@ -2988,7 +2988,7 @@ void defaults_px_destroy_all_unref(void)
 	for (px = cebis_item_first(&defproxy_by_name, conf.name_node, id, struct proxy); px; px = nx) {
 		BUG_ON(!(px->cap & PR_CAP_DEF));
 		nx = cebis_item_next(&defproxy_by_name, conf.name_node, id, px);
-		if (!px->conf.refcount)
+		if (!px->conf.def_ref)
 			defaults_px_destroy(px);
 	}
 }
@@ -3001,7 +3001,7 @@ void defaults_px_detach(struct proxy *px)
 {
 	BUG_ON(!(px->cap & PR_CAP_DEF));
 	cebis_item_delete(&defproxy_by_name, conf.name_node, id, px);
-	if (!px->conf.refcount)
+	if (!px->conf.def_ref)
 		defaults_px_destroy(px);
 	/* If not destroyed, <px> can still be accessed in <defaults_list>. */
 }
@@ -3013,7 +3013,7 @@ void defaults_px_ref_all(void)
 	for (px = cebis_item_first(&defproxy_by_name, conf.name_node, id, struct proxy);
 	     px;
 	     px = cebis_item_next(&defproxy_by_name, conf.name_node, id, px)) {
-		++px->conf.refcount;
+		++px->conf.def_ref;
 	}
 }
 
@@ -3024,15 +3024,15 @@ void defaults_px_unref_all(void)
 	for (px = cebis_item_first(&defproxy_by_name, conf.name_node, id, struct proxy); px; px = nx) {
 		nx = cebis_item_next(&defproxy_by_name, conf.name_node, id, px);
 
-		BUG_ON(!px->conf.refcount);
-		if (!--px->conf.refcount)
+		BUG_ON(!px->conf.def_ref);
+		if (!--px->conf.def_ref)
 			defaults_px_destroy(px);
 	}
 }
 
 /* Add a reference on the default proxy <defpx> for the proxy <px> Nothing is
  * done if <px> already references <defpx>. Otherwise, the default proxy
- * refcount is incremented by one.
+ * <def_ref> count is incremented by one.
  *
  * This operation is not thread safe. It must only be performed during init
  * stage or under thread isolation.
@@ -3045,11 +3045,11 @@ static inline void defaults_px_ref(struct proxy *defpx, struct proxy *px)
 	BUG_ON(px->defpx);
 
 	px->defpx = defpx;
-	defpx->conf.refcount++;
+	defpx->conf.def_ref++;
 }
 
 /* Check that <px> can inherits from <defpx> default proxy. If some settings
- * cannot be copied, refcount of the defaults instance is incremented.
+ * cannot be copied, <def_ref> count of the defaults instance is incremented.
  * Inheritance may be impossible due to incompatibility issues. In this case,
  * <errmsg> will be allocated to point to a textual description of the error.
  *
@@ -3082,7 +3082,7 @@ int proxy_ref_defaults(struct proxy *px, struct proxy *defpx, char **errmsg)
 	 * - It cannot define 'tcp-response content' rules if it
 	 *   is used to init frontend sections.
 	 *
-	 * If no error is found, refcount of the default proxy is incremented.
+	 * If no error is found, <def_ref> count of the default proxy is incremented.
 	 */
 	if ((!LIST_ISEMPTY(&defpx->http_req_rules)        ||
 	     !LIST_ISEMPTY(&defpx->http_res_rules)        ||
@@ -3145,7 +3145,7 @@ int proxy_ref_defaults(struct proxy *px, struct proxy *defpx, char **errmsg)
 }
 
 /* proxy <px> removes its reference on its default proxy. The default proxy
- * refcount is decremented by one. If it was the last reference, the
+ * <def_ref> count is decremented by one. If it was the last reference, the
  * corresponding default proxy is destroyed. For now this operation is not
  * thread safe and is performed during deinit staged only.
 */
@@ -3153,7 +3153,7 @@ void proxy_unref_defaults(struct proxy *px)
 {
 	if (px->defpx == NULL)
 		return;
-	if (!--px->defpx->conf.refcount)
+	if (!--px->defpx->conf.def_ref)
 		defaults_px_destroy(px->defpx);
 	px->defpx = NULL;
 }
