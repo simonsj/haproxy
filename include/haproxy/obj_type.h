@@ -27,6 +27,7 @@
 #include <haproxy/check-t.h>
 #include <haproxy/connection-t.h>
 #include <haproxy/hstream-t.h>
+#include <haproxy/hastream-t.h>
 #include <haproxy/listener-t.h>
 #include <haproxy/obj_type-t.h>
 #include <haproxy/pool.h>
@@ -201,6 +202,19 @@ static inline struct hstream *objt_hstream(enum obj_type *t)
 		return NULL;
 
 	return __objt_hstream(t);
+}
+
+static inline struct hastream *__objt_hastream(enum obj_type *t)
+{
+	return container_of(t, struct hastream, obj_type);
+}
+
+static inline struct hastream *objt_hastream(enum obj_type *t)
+{
+	if (!t || *t != OBJ_TYPE_HXLOAD)
+		return NULL;
+
+	return __objt_hastream(t);
 }
 
 #ifdef USE_QUIC

@@ -47,6 +47,7 @@ enum obj_type {
 	OBJ_TYPE_DGRAM,        /* object is a struct quic_dgram */
 #endif
 	OBJ_TYPE_HATERM,       /* object is a struct hstream */
+	OBJ_TYPE_HXLOAD,       /* object is a struct hxstream */
 	OBJ_TYPE_ENTRIES       /* last one : number of entries */
 } __attribute__((packed)) ;
 
