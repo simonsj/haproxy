@@ -3114,8 +3114,16 @@ static void h3_lclose(struct qcs *qcs, enum qcc_app_ops_lclose_mode mode)
 		}
 		break;
 
-	default:
-		qcc_reset_stream(qcs, 0, 0);
+	case QCC_APP_OPS_LCLO_MODE_ABORT:
+		qcc_reset_stream(qcs, H3_ERR_REQUEST_CANCELLED, se_tevt_type_cancelled);
+		break;
+
+	case QCC_APP_OPS_LCLO_MODE_KILL_CONN:
+		qcc_reset_stream(qcs, H3_ERR_EXCESSIVE_LOAD, se_tevt_type_cancelled);
+		if (!(qcs->qcc->flags & (QC_CF_ERR_CONN|QC_CF_ERRL))) {
+			qcc_set_error(qcs->qcc, H3_ERR_EXCESSIVE_LOAD, 1,
+			              muxc_tevt_type_graceful_shut);
+		}
 		break;
 	}
 
