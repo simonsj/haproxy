@@ -3066,53 +3066,42 @@ error:
 }
 
 
-
-
 /*
- * Parsing function of `set ssl cert`, it updates or creates a temporary ckch.
- * It uses a set_cert_ctx context, and ckchs_transaction under a lock.
+ * Load the contents of <payload> (x509 format) into the ckch_store indexed by
+ * <path> in the ckch_store tree. The entry must already exist in the tree.
+ * Return 0 in case of success.
  */
-static int cli_parse_set_cert(char **args, char *payload, struct appctx *appctx, void *private)
+int ckch_store_load_payload(char *path, char *payload, char **err)
 {
 	struct ckch_store *new_ckchs = NULL;
 	struct ckch_store *old_ckchs = NULL;
-	char *err = NULL;
-	int i;
-	int errcode = 0;
 	char *end;
 	struct cert_exts *cert_ext = &cert_exts[0]; /* default one, PEM */
 	struct ckch_data *data;
-	struct buffer *buf;
-
-	if (!cli_has_level(appctx, ACCESS_LVL_ADMIN))
-		return 1;
-
-	if (!*args[3] || !payload)
-		return cli_err(appctx, "'set ssl cert' expects a filename and a certificate as a payload\n");
+	int errcode = 0;
+	int i;
+	struct buffer *pathbuf = NULL;
 
 	/* The operations on the CKCH architecture are locked so we can
 	 * manipulate ckch_store and ckch_inst */
-	if (HA_SPIN_TRYLOCK(CKCH_LOCK, &ckch_lock))
-		return cli_err(appctx, "Can't update the certificate!\nOperations on certificates are currently locked!\n");
-
-	if ((buf = alloc_trash_chunk()) == NULL) {
-		memprintf(&err, "%sCan't allocate memory\n", err ? err : "");
-		errcode |= ERR_ALERT | ERR_FATAL;
+	if (HA_SPIN_TRYLOCK(CKCH_LOCK, &ckch_lock)) {
+		memprintf(err, "Can't update the certificate!\nOperations on certificates are currently locked!\n");
 		goto end;
 	}
 
-	if (!chunk_strcpy(buf, args[3])) {
-		memprintf(&err, "%sCan't allocate memory\n", err ? err : "");
+	pathbuf = alloc_trash_chunk();
+	if (!pathbuf || !chunk_strcpy(pathbuf, path)) {
+		memprintf(err, "%sCan't allocate memory\n", (err && *err) ? *err : "");
 		errcode |= ERR_ALERT | ERR_FATAL;
 		goto end;
 	}
 
 	/* check which type of file we want to update */
 	for (i = 0; cert_exts[i].ext != NULL; i++) {
-		end = strrchr(buf->area, '.');
+		end = strrchr(pathbuf->area, '.');
 		if (end && *cert_exts[i].ext && (strcmp(end + 1, cert_exts[i].ext) == 0)) {
 			*end = '\0';
-			buf->data = strlen(buf->area);
+			pathbuf->data = strlen(pathbuf->area);
 			cert_ext = &cert_exts[i];
 			break;
 		}
@@ -3121,29 +3110,29 @@ static int cli_parse_set_cert(char **args, char *payload, struct appctx *appctx,
 	/* if there is an ongoing transaction */
 	if (ckchs_transaction.path) {
 		/* if there is an ongoing transaction, check if this is the same file */
-		if (strcmp(ckchs_transaction.path, buf->area) != 0) {
+		if (strcmp(ckchs_transaction.path, pathbuf->area) != 0) {
 			/* we didn't find the transaction, must try more cases below */
 
 			/* if the del-ext option is activated we should try to take a look at a ".crt" too. */
 			if (cert_ext->type != CERT_TYPE_PEM && global_ssl.extra_files_noext) {
-				if (!chunk_strcat(buf, ".crt")) {
-					memprintf(&err, "%sCan't allocate memory\n", err ? err : "");
+				if (!chunk_strcat(pathbuf, ".crt")) {
+					memprintf(err, "%sCan't allocate memory\n", (err && *err) ? *err : "");
 					errcode |= ERR_ALERT | ERR_FATAL;
 					goto end;
 				}
 				/* check again with the right extension */
-				if (strcmp(ckchs_transaction.path, buf->area) != 0) {
+				if (strcmp(ckchs_transaction.path, pathbuf->area) != 0) {
 					/* remove .crt of the error message */
-					*(b_orig(buf) + b_data(buf) + strlen(".crt")) = '\0';
-					b_sub(buf, strlen(".crt"));
+					*(b_orig(pathbuf) + b_data(pathbuf) + strlen(".crt")) = '\0';
+					b_sub(pathbuf, strlen(".crt"));
 
-					memprintf(&err, "The ongoing transaction is about '%s' but you are trying to set '%s'\n", ckchs_transaction.path, buf->area);
+					memprintf(err, "The ongoing transaction is about '%s' but you are trying to set '%s'\n", ckchs_transaction.path, pathbuf->area);
 					errcode |= ERR_ALERT | ERR_FATAL;
 					goto end;
 				}
 			} else {
 				/* without del-ext the error is definitive */
-				memprintf(&err, "The ongoing transaction is about '%s' but you are trying to set '%s'\n", ckchs_transaction.path, buf->area);
+				memprintf(err, "The ongoing transaction is about '%s' but you are trying to set '%s'\n", ckchs_transaction.path, pathbuf->area);
 				errcode |= ERR_ALERT | ERR_FATAL;
 				goto end;
 			}
@@ -3154,24 +3143,24 @@ static int cli_parse_set_cert(char **args, char *payload, struct appctx *appctx,
 	} else {
 
 		/* lookup for the certificate in the tree */
-		old_ckchs = ckchs_lookup(buf->area);
+		old_ckchs = ckchs_lookup(pathbuf->area);
 
 		if (!old_ckchs) {
 			/* if the del-ext option is activated we should try to take a look at a ".crt" too. */
 			if (cert_ext->type != CERT_TYPE_PEM && global_ssl.extra_files_noext) {
-				if (!chunk_strcat(buf, ".crt")) {
-					memprintf(&err, "%sCan't allocate memory\n", err ? err : "");
+				if (!chunk_strcat(pathbuf, ".crt")) {
+					memprintf(err, "%sCan't allocate memory\n", (err && *err) ? *err : "");
 					errcode |= ERR_ALERT | ERR_FATAL;
 					goto end;
 				}
-				old_ckchs = ckchs_lookup(buf->area);
+				old_ckchs = ckchs_lookup(pathbuf->area);
 			}
 		}
 	}
 
 	if (!old_ckchs) {
-		memprintf(&err, "%sCan't replace a certificate which is not referenced by the configuration!\n",
-		          err ? err : "");
+		memprintf(err, "%sCan't replace a certificate which is not referenced by the configuration!\n",
+		          (err && *err) ? *err : "");
 		errcode |= ERR_ALERT | ERR_FATAL;
 		goto end;
 	}
@@ -3179,8 +3168,7 @@ static int cli_parse_set_cert(char **args, char *payload, struct appctx *appctx,
 	/* duplicate the ckch store */
 	new_ckchs = ckchs_dup(old_ckchs);
 	if (!new_ckchs) {
-		memprintf(&err, "%sCannot allocate memory!\n",
-			  err ? err : "");
+		memprintf(err, "%sCannot allocate memory!\n", (err && *err) ? *err : "");
 		errcode |= ERR_ALERT | ERR_FATAL;
 		goto end;
 	}
@@ -3196,8 +3184,8 @@ static int cli_parse_set_cert(char **args, char *payload, struct appctx *appctx,
 	data = new_ckchs->data;
 
 	/* apply the change on the duplicate */
-	if (cert_ext->load(buf->area, payload, data, &err) != 0) {
-		memprintf(&err, "%sCan't load the payload\n", err ? err : "");
+	if (cert_ext->load(pathbuf->area, payload, data, err) != 0) {
+		memprintf(err, "%sCan't load the payload\n", (err && *err) ? *err : "");
 		errcode |= ERR_ALERT | ERR_FATAL;
 		goto end;
 	}
@@ -3208,10 +3196,9 @@ static int cli_parse_set_cert(char **args, char *payload, struct appctx *appctx,
 	if (!ckchs_transaction.old_ckchs) {
 		ckchs_transaction.old_ckchs = old_ckchs;
 		ckchs_transaction.path = old_ckchs->path;
-		err = memprintf(&err, "Transaction created for certificate %s!\n", ckchs_transaction.path);
+		memprintf(err, "Transaction created for certificate %s!\n", ckchs_transaction.path);
 	} else {
-		err = memprintf(&err, "Transaction updated for certificate %s!\n", ckchs_transaction.path);
-
+		memprintf(err, "Transaction updated for certificate %s!\n", ckchs_transaction.path);
 	}
 
 	/* free the previous ckchs if there was a transaction */
@@ -3219,20 +3206,39 @@ static int cli_parse_set_cert(char **args, char *payload, struct appctx *appctx,
 
 	ckchs_transaction.new_ckchs = new_ckchs;
 
+end:
+	if (errcode & ERR_CODE)
+		ckch_store_free(new_ckchs);
+
+	free_trash_chunk(pathbuf);
+
+	HA_SPIN_UNLOCK(CKCH_LOCK, &ckch_lock);
+	return errcode;
+}
+
+/*
+ * Parsing function of `set ssl cert`, it updates or creates a temporary ckch.
+ * It uses a set_cert_ctx context, and ckchs_transaction under a lock.
+ */
+static int cli_parse_set_cert(char **args, char *payload, struct appctx *appctx, void *private)
+{
+	char *err = NULL;
+	int errcode = 0;
+
+	if (!cli_has_level(appctx, ACCESS_LVL_ADMIN))
+		return 1;
+
+	if (!*args[3] || !payload)
+		return cli_err(appctx, "'set ssl cert' expects a filename and a certificate as a payload\n");
+
+	errcode = ckch_store_load_payload(args[3], payload, &err);
 
 	/* creates the SNI ctxs later in the IO handler */
 
 end:
-	free_trash_chunk(buf);
-
-	if (errcode & ERR_CODE) {
-		ckch_store_free(new_ckchs);
-		HA_SPIN_UNLOCK(CKCH_LOCK, &ckch_lock);
+	if (errcode & ERR_CODE)
 		return cli_dynerr(appctx, memprintf(&err, "%sCan't update %s!\n", err ? err : "", args[3]));
-	} else {
-		HA_SPIN_UNLOCK(CKCH_LOCK, &ckch_lock);
-		return cli_dynmsg(appctx, LOG_NOTICE, err);
-	}
+	return cli_dynmsg(appctx, LOG_NOTICE, err);
 	/* TODO: handle the ERR_WARN which are not handled because of the io_handler */
 }
 
@@ -3279,12 +3285,54 @@ error:
 	return cli_dynerr(appctx, err);
 }
 
+/*
+ * Create ckch_store and insert it in the ckch_store tree.
+ * The lock one the tree must not be taken beforehand.
+ * Return 0 in case of success, 1 if an entry with the same path already exists,
+ * -1 otherwise.
+ */
+int ckch_store_create(char *path, char **err)
+{
+	struct ckch_store *store = NULL;
+
+	/* The operations on the CKCH architecture are locked so we can
+	 * manipulate ckch_store and ckch_inst */
+	if (HA_SPIN_TRYLOCK(CKCH_LOCK, &ckch_lock)) {
+		memprintf(err, "Can't create a certificate!\nOperations on certificates are currently locked!\n");
+		goto error;
+	}
+
+	store = ckchs_lookup(path);
+	if (store != NULL) {
+		memprintf(err, "Certificate '%s' already exists!\n", path);
+		store = NULL; /* we don't want to free it */
+		goto error;
+	}
+	/* we won't support multi-certificate bundle here */
+	store = ckch_store_new(path);
+	if (!store) {
+		memprintf(err, "unable to allocate memory.\n");
+		goto error;
+	}
+
+	/* insert into the ckchs tree */
+	ebst_insert(&ckchs_tree, &store->node);
+	memprintf(err, "New empty certificate store '%s'!\n", path);
+
+	HA_SPIN_UNLOCK(CKCH_LOCK, &ckch_lock);
+
+	return 0;
+
+error:
+	HA_SPIN_UNLOCK(CKCH_LOCK, &ckch_lock);
+	free(store);
+	return 1;
+}
+
 /* parsing function of 'new ssl cert' */
 static int cli_parse_new_cert(char **args, char *payload, struct appctx *appctx, void *private)
 {
-	struct ckch_store *store;
 	char *err = NULL;
-	char *path;
 
 	if (!cli_has_level(appctx, ACCESS_LVL_ADMIN))
 		return 1;
@@ -3292,35 +3340,11 @@ static int cli_parse_new_cert(char **args, char *payload, struct appctx *appctx,
 	if (!*args[3])
 		return cli_err(appctx, "'new ssl cert' expects a filename\n");
 
-	path = args[3];
-
-	/* The operations on the CKCH architecture are locked so we can
-	 * manipulate ckch_store and ckch_inst */
-	if (HA_SPIN_TRYLOCK(CKCH_LOCK, &ckch_lock))
-		return cli_err(appctx, "Can't create a certificate!\nOperations on certificates are currently locked!\n");
-
-	store = ckchs_lookup(path);
-	if (store != NULL) {
-		memprintf(&err, "Certificate '%s' already exists!\n", path);
-		store = NULL; /* we don't want to free it */
+	if (ckch_store_create(args[3], &err))
 		goto error;
-	}
-	/* we won't support multi-certificate bundle here */
-	store = ckch_store_new(path);
-	if (!store) {
-		memprintf(&err, "unable to allocate memory.\n");
-		goto error;
-	}
 
-	/* insert into the ckchs tree */
-	ebst_insert(&ckchs_tree, &store->node);
-	memprintf(&err, "New empty certificate store '%s'!\n", args[3]);
-
-	HA_SPIN_UNLOCK(CKCH_LOCK, &ckch_lock);
 	return cli_dynmsg(appctx, LOG_NOTICE, err);
 error:
-	free(store);
-	HA_SPIN_UNLOCK(CKCH_LOCK, &ckch_lock);
 	return cli_dynerr(appctx, err);
 }
 
