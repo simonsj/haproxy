@@ -2901,6 +2901,51 @@ void ckch_store_replace(struct ckch_store *old_ckchs, struct ckch_store *new_ckc
 
 
 /*
+ * Rebuild all the ckch instances from <old_ckchs> into <new_ckchs>, using
+ * <ckchi> as the first instance to manage (in case of reentry), and process at
+ * most <max> instances at a time. <count> will be the actual amount of
+ * instances rebuilt.
+ * Return -1 in case of error, 1 if all the instances were rebuilt, 0 if <max>
+ * instances were built and the function should be called again.
+ */
+int ckch_store_rebuild_instances(struct ckch_store *old_ckchs, struct ckch_store *new_ckchs,
+                                 struct ckch_inst **ckchi, int max, int *count, char **err)
+{
+
+	if (!count)
+		return -1;
+
+	*count = 0;
+
+	/* we didn't start yet, set it to the first elem */
+	if (*ckchi == NULL)
+		*ckchi = LIST_ELEM(old_ckchs->ckch_inst.n, struct ckch_inst*, by_ckchs);
+
+	/* walk through the old ckch_inst and creates new ckch_inst using the updated ckchs */
+	list_for_each_entry_from((*ckchi), &old_ckchs->ckch_inst, by_ckchs) {
+		struct ckch_inst *new_inst;
+
+		/* it takes a lot of CPU to creates SSL_CTXs, so we yield every <max> CKCH instances */
+		if (max > 0 && *count >= max) {
+			/* yield */
+			return 0;
+		}
+
+		if (ckch_inst_rebuild(new_ckchs, *ckchi, &new_inst, err)) {
+			/* error */
+			return -1;
+		}
+
+		/* link the new ckch_inst to the duplicate */
+		LIST_APPEND(&new_ckchs->ckch_inst, &new_inst->by_ckchs);
+		(*count)++;
+	}
+
+	return 1;
+}
+
+
+/*
  * This function tries to create the new ckch_inst and their SNIs
  *
  * /!\ don't forget to update __hlua_ckch_commit() if you changes things there. /!\
@@ -2910,7 +2955,7 @@ static int cli_io_handler_commit_cert(struct appctx *appctx)
 	struct commit_cert_ctx *ctx = appctx->svcctx;
 	int y = 0;
 	struct ckch_store *old_ckchs, *new_ckchs = NULL;
-	struct ckch_inst *ckchi;
+	int retval = 0;
 
 	usermsgs_clr("CLI");
 	while (1) {
@@ -2935,39 +2980,30 @@ static int cli_io_handler_commit_cert(struct appctx *appctx)
 				old_ckchs = ctx->old_ckchs;
 				new_ckchs = ctx->new_ckchs;
 
-				/* get the next ckchi to regenerate */
-				ckchi = ctx->next_ckchi;
-				/* we didn't start yet, set it to the first elem */
-				if (ckchi == NULL)
-					ckchi = LIST_ELEM(old_ckchs->ckch_inst.n, typeof(ckchi), by_ckchs);
+				/* Rebuild at most 10 ckch instances before yielding */
+				retval = ckch_store_rebuild_instances(old_ckchs, new_ckchs, &ctx->next_ckchi,
+								      10, &y, &ctx->err);
 
-				/* walk through the old ckch_inst and creates new ckch_inst using the updated ckchs */
-				list_for_each_entry_from(ckchi, &old_ckchs->ckch_inst, by_ckchs) {
-					struct ckch_inst *new_inst;
+				if (retval < 0) {
+					ctx->state = CERT_ST_ERROR;
+					goto error;
+				} else {
+					while (y != 0) {
+						/* display one dot per new instance */
+						if (applet_putstr(appctx, ".") == -1)
+							/* We might not display the proper number of
+							 * dots but the instances were actually rebuilt. */
+							goto yield;
+						--y;
+					}
 
-					/* save the next ckchi to compute in case of yield */
-					ctx->next_ckchi = ckchi;
-
-					/* it takes a lot of CPU to creates SSL_CTXs, so we yield every 10 CKCH instances */
-					if (y >= 10) {
+					if (retval == 0) {
+						/* yield */
 						applet_have_more_data(appctx); /* let's come back later */
 						goto yield;
 					}
-
-					/* display one dot per new instance */
-					if (applet_putstr(appctx, ".") == -1)
-						goto yield;
-
-					ctx->err = NULL;
-					if (ckch_inst_rebuild(new_ckchs, ckchi, &new_inst, &ctx->err)) {
-						ctx->state = CERT_ST_ERROR;
-						goto error;
-					}
-
-					/* link the new ckch_inst to the duplicate */
-					LIST_APPEND(&new_ckchs->ckch_inst, &new_inst->by_ckchs);
-					y++;
 				}
+
 				ctx->state = CERT_ST_INSERT;
 				__fallthrough;
 			case CERT_ST_INSERT:

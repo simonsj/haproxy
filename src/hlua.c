@@ -13686,40 +13686,25 @@ __LJMP static int hlua_ckch_commit_yield(lua_State *L, int status, lua_KContext 
 {
 	struct ckch_inst **lua_ckchi = lua_touserdata(L, -1);
 	struct ckch_store **lua_ckchs = lua_touserdata(L, -2);
-	struct ckch_inst *ckchi = *lua_ckchi;
 	struct ckch_store *old_ckchs = lua_ckchs[0];
 	struct ckch_store *new_ckchs = lua_ckchs[1];
 	struct hlua *hlua;
 	char *err = NULL;
 	int y = 1;
+	int retval = 0;
 
 	hlua = hlua_gethlua(L);
 
-	/* get the first ckchi to copy */
-	if (ckchi == NULL)
-		ckchi = LIST_ELEM(old_ckchs->ckch_inst.n, typeof(ckchi), by_ckchs);
-
 	/* walk through the old ckch_inst and creates new ckch_inst using the updated ckchs */
-	list_for_each_entry_from(ckchi, &old_ckchs->ckch_inst, by_ckchs) {
-		struct ckch_inst *new_inst;
+	retval = ckch_store_rebuild_instances(old_ckchs, new_ckchs, lua_ckchi,
+					      hlua ? 10 : -1, &y, &err);
 
-		/* it takes a lot of CPU to creates SSL_CTXs, so we yield every 10 CKCH instances
-		 * during runtime
-		 */
-		if (hlua && (y % 10) == 0) {
-
-			*lua_ckchi = ckchi;
-
-			task_wakeup(hlua->task, TASK_WOKEN_MSG);
-			MAY_LJMP(hlua_yieldk(L, 0, 0, hlua_ckch_commit_yield, TICK_ETERNITY, 0));
-		}
-
-		if (ckch_inst_rebuild(new_ckchs, ckchi, &new_inst, &err))
-			goto error;
-
-		/* link the new ckch_inst to the duplicate */
-		LIST_APPEND(&new_ckchs->ckch_inst, &new_inst->by_ckchs);
-		y++;
+	if (retval < 0)
+		goto error;
+	else if (retval == 0) {
+		/* yield */
+		task_wakeup(hlua->task, TASK_WOKEN_MSG);
+		MAY_LJMP(hlua_yieldk(L, 0, 0, hlua_ckch_commit_yield, TICK_ETERNITY, 0));
 	}
 
 	/* The generation is finished, we can insert everything */
