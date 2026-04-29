@@ -680,9 +680,11 @@ static int smp_fetch_body(const struct arg *args, struct sample *smp, const char
 				if (!chk) {
 					smp->flags &= ~SMP_F_CONST;
 					chk = get_trash_chunk_sz(htx->data);
-					chunk_istcat(chk, body);
+					if (!chunk_istcat(chk, body))
+						return 0;
 				}
-				chunk_istcat(chk, htx_get_blk_value(htx, blk));
+				if (!chunk_istcat(chk, htx_get_blk_value(htx, blk)))
+					return 0;
 				body = ist2(b_orig(chk), b_data(chk));
 			}
 			else {
@@ -941,9 +943,12 @@ static int smp_fetch_hdr_names(const struct arg *args, struct sample *smp, const
 			continue;
 		n = htx_get_blk_name(htx, blk);
 
-		if (temp->data)
-			temp->area[temp->data++] = del;
-		chunk_istcat(temp, n);
+		if (temp->data) {
+			if (!chunk_memcat(temp, &del, 1))
+				return 0;
+		}
+		if (!chunk_istcat(temp, n))
+			return 0;
 	}
 
 	smp->data.type = SMP_T_STR;
@@ -1176,7 +1181,8 @@ static int smp_fetch_base(const struct arg *args, struct sample *smp, const char
 
 	/* OK we have the header value in ctx.value */
 	temp = get_trash_chunk();
-	chunk_istcat(temp, ctx.value);
+	if (!chunk_istcat(temp, ctx.value))
+		return 0;
 
 	/* now retrieve the path */
 	sl = http_get_stline(htx);
@@ -1192,8 +1198,10 @@ static int smp_fetch_base(const struct arg *args, struct sample *smp, const char
 				;
 		}
 
-		if (len && *(path.ptr) == '/')
-			chunk_memcat(temp, path.ptr, len);
+		if (len && *(path.ptr) == '/') {
+			if (!chunk_memcat(temp, path.ptr, len))
+				return 0;
+		}
 	}
 
 	smp->data.type = SMP_T_STR;
@@ -2113,9 +2121,11 @@ static int smp_fetch_body_param(const struct arg *args, struct sample *smp, cons
 					/* More than one DATA block we must use a trash */
 					if (!chk) {
 						chk = get_trash_chunk_sz(htx->data);
-						chunk_istcat(chk, body);
+						if (!chunk_istcat(chk, body))
+							break;
 					}
-					chunk_istcat(chk, htx_get_blk_value(htx, blk));
+					if (!chunk_istcat(chk, htx_get_blk_value(htx, blk)))
+						break;
 					body = ist2(b_orig(chk), b_data(chk));
 				}
 				else
