@@ -1,0 +1,66 @@
+varnishtest "Bug fix: master CLI connection slots freed on client disconnect"
+
+# Regression test for a master CLI socket connection leak in master-worker mode.
+#
+# mworker_proxy has a fixed maxconn of 10.  When clients connect to the master
+# socket, send a command that is forwarded to a busy worker, and then close
+# the connection due to a client-side receive timeout, haproxy must free each
+# slot as the client disconnects.
+#
+# Without the fix: slots remain occupied after the client disconnects, so the
+# master CLI becomes unreachable once all 10 slots are filled.
+# With the fix: slots are freed on client disconnect and the master CLI keeps
+# accepting new connections.
+#
+# The worker is made unresponsive using "debug dev delay" (expert-mode) with
+# nbthread 1 so a single delay blocks the entire worker CLI.  This avoids
+# using SIGSTOP/SIGCONT which can be unreliable in CI environments.
+
+#REGTEST_TYPE=bug
+
+feature cmd "command -v socat"
+feature cmd "command -v timeout"
+feature ignore_unknown_macro
+
+server s1 {
+} -start
+
+haproxy h1 -W -S -conf {
+    global
+        nbthread 1
+
+    defaults
+        mode http
+        timeout connect "${HAPROXY_TEST_TIMEOUT-5s}"
+        timeout client  "${HAPROXY_TEST_TIMEOUT-5s}"
+        timeout server  "${HAPROXY_TEST_TIMEOUT-5s}"
+
+    frontend fe
+        bind "fd@${fe}"
+        default_backend be
+
+    backend be
+        server s1 ${s1_addr}:${s1_port}
+} -start
+
+# Fill all 10 master CLI slots (mworker_proxy->maxconn is hardcoded to 10).
+# Each socat sends "expert-mode on" followed by "@1 debug dev delay 10000"
+# which blocks the single worker thread for 10 s.  After 2 s the timeout(1)
+# wrapper kills socat, simulating a client-side receive timeout.  "wait"
+# ensures all background processes have exited before proceeding.
+shell {
+    for i in $(seq 1 10); do
+        (printf "expert-mode on\n@1 debug dev delay 10000\n" \
+         | timeout 2 socat TCP:${h1_mcli_addr}:${h1_mcli_port} - 2>/dev/null) &
+    done
+    wait
+}
+
+# This is the key assertion: after all 10 clients have disconnected, a new
+# connection to the master CLI must succeed.  With the bug all 10 slots are
+# still marked occupied and this connect is refused or times out.
+haproxy h1 -mcli {
+    send "show version"
+    expect ~ "3."
+}
+
