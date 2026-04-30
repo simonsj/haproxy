@@ -138,7 +138,6 @@ struct acl_expr *parse_acl_expr(const char **args, char **err, struct arg_list *
 	const char *arg;
 	struct sample_expr *smp = NULL;
 	int idx = 0;
-	char *ckw = NULL;
 	const char *endt;
 	int cur_type;
 	int nbargs;
@@ -410,7 +409,7 @@ struct acl_expr *parse_acl_expr(const char **args, char **err, struct arg_list *
 	}
 
 	if (aclkw) {
-		if (((aclkw->match_type == PAT_MATCH_BEG || aclkw->match_type == PAT_MATCH_DIR || aclkw->match_type == PAT_MATCH_DOM ||
+		if (((aclkw->match_type == PAT_MATCH_BEG || aclkw->match_type == PAT_MATCH_DIR ||
 		      aclkw->match_type == PAT_MATCH_DOM || aclkw->match_type == PAT_MATCH_END || aclkw->match_type == PAT_MATCH_LEN ||
 		      aclkw->match_type == PAT_MATCH_REG || aclkw->match_type == PAT_MATCH_SUB) &&
 		     expr->pat.match != pat_match_fcts[aclkw->match_type]) ||
@@ -593,7 +592,6 @@ struct acl_expr *parse_acl_expr(const char **args, char **err, struct arg_list *
 	prune_acl_expr(expr);
 	free(expr);
  out_free_smp:
-	free(ckw);
 	free(smp);
  out_return:
 	return NULL;
