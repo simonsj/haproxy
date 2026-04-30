@@ -2604,12 +2604,13 @@ re:
 				/* opportunistic validation, don't do the
 				 * cond_ready steps */
 				st = ACME_CHALLENGE;
-				ctx->cfg->cond_ready &= ACME_RDY_INITIAL_DNS;
+				ctx->cfg->cond_ready = ACME_RDY_INITIAL_DNS;
 				ctx->next_auth = ctx->auths;
 				goto nextreq;
 			}
 
-			/* opportunistic DNS check failed, try the ready_cond */
+			/* opportunistic DNS check failed, try the ready_cond, remove initial dns as a condition */
+			ctx->cfg->cond_ready &= ~ACME_RDY_INITIAL_DNS;
 			st = ACME_CLI_WAIT;
 			goto nextreq;
 		}
