@@ -97,18 +97,18 @@ static struct map_descriptor *map_create_descriptor(struct sample_conv *conv)
 int sample_load_map(struct arg *arg, struct sample_conv *conv,
                     const char *file, int line, char **err)
 {
-	struct map_descriptor *desc;
+	struct map_descriptor *desc = NULL;
 
 	if (!(global.mode & MODE_STARTING)) {
 		memprintf(err, "map: cannot load map at runtime");
-		return 0;
+		goto fail;
 	}
 
 	/* create new map descriptor */
 	desc = map_create_descriptor(conv);
 	if (!desc) {
 		memprintf(err, "out of memory");
-		return 0;
+		goto fail;
 	}
 
 	/* Initialize pattern */
@@ -132,14 +132,13 @@ int sample_load_map(struct arg *arg, struct sample_conv *conv,
 	default:
 		memprintf(err, "map: internal haproxy error: no default parse case for the input type <%d>.",
 		          conv->out_type);
-		free(desc);
-		return 0;
+		goto fail;
 	}
 
 	/* Load map. */
 	if (!pattern_read_from_file(&desc->pat, PAT_REF_MAP, arg[0].data.str.area, PAT_MF_NO_DNS,
 	                            1, err, file, line))
-		return 0;
+		goto fail;
 
 	/* the maps of type IP support a string as default value. This
 	 * string can be an ipv4 or an ipv6, we must convert it.
@@ -149,7 +148,7 @@ int sample_load_map(struct arg *arg, struct sample_conv *conv,
 		if (!map_parse_ip(arg[1].data.str.area, &data)) {
 			memprintf(err, "map: cannot parse default ip <%s>.",
 				  arg[1].data.str.area);
-			return 0;
+			goto fail;
 		}
 		chunk_destroy(&arg[1].data.str);
 		if (data.type == SMP_T_IPV4) {
@@ -167,6 +166,9 @@ int sample_load_map(struct arg *arg, struct sample_conv *conv,
 	arg[0].data.map = desc;
 
 	return 1;
+ fail:
+	free(desc);
+	return 0;
 }
 
 /* try to match input sample against map entries, returns matched entry's key
