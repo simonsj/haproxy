@@ -1364,8 +1364,6 @@ int smp_fetch_acl_parse(struct arg *args, char **err_msg)
 	LIST_APPEND(&acl_sample->cond.suites, &acl_sample->suite.list);
 	acl_sample->cond.val = ~0U; // the keyword is valid everywhere for now.
 
-	args->data.ptr = acl_sample;
-
 	for (i = 0; args[i].type != ARGT_STOP; i++) {
 		name = args[i].data.str.area;
 		if (name[0] == '!') {
@@ -1388,6 +1386,9 @@ int smp_fetch_acl_parse(struct arg *args, char **err_msg)
 		LIST_APPEND(&acl_sample->suite.terms, &acl_sample->terms[i].list);
 	}
 
+	/* make the argument for smp_fetch_acl() */
+	args->data.ptr = acl_sample;
+	args->type     = ARGT_PTR;
 	return 1;
 
 err:
