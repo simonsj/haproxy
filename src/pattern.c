@@ -2590,12 +2590,18 @@ int pattern_read_from_file(struct pattern_head *head, unsigned int refflags,
 		if (ref->flags & PAT_REF_FILE) {
 			if (load_smp) {
 				ref->flags |= PAT_REF_SMP;
-				if (!pat_ref_read_from_file_smp(ref, err))
+				if (!pat_ref_read_from_file_smp(ref, err)) {
+					LIST_DELETE(&ref->list);
+					pat_ref_free(ref);
 					return 0;
+				}
 			}
 			else {
-				if (!pat_ref_read_from_file(ref, err))
+				if (!pat_ref_read_from_file(ref, err)) {
+					LIST_DELETE(&ref->list);
+					pat_ref_free(ref);
 					return 0;
+				}
 			}
 		}
 		else if ((ref->flags & PAT_REF_ID) && load_smp)
