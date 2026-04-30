@@ -61,6 +61,7 @@
 #   USE_THREAD_DUMP         : use the more advanced thread state dump system. Automatic.
 #   USE_OT                  : enable the OpenTracing filter
 #   USE_OTEL                : enable the OpenTelemetry filter
+#   EXTRA_MAKE              : space-separated list of external addons using a Makefile.inc
 #   USE_MEMORY_PROFILING    : enable the memory profiler. Linux-glibc only.
 #   USE_LIBATOMIC           : force to link with/without libatomic. Automatic.
 #   USE_PTHREAD_EMULATION   : replace pthread's rwlocks with ours
@@ -872,6 +873,10 @@ endif
 
 ifneq ($(USE_OTEL:0=),)
   include addons/otel/Makefile
+endif
+
+ifneq ($(EXTRA_MAKE),)
+  include $(addsuffix /Makefile.inc,$(EXTRA_MAKE))
 endif
 
 # better keep this one close to the end, as several libs above may need it
