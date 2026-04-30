@@ -267,7 +267,8 @@ static void quic_dgram_init(struct quic_dgram *dgram,
                             struct sockaddr_storage *saddr,
                             struct sockaddr_storage *daddr)
 {
-	BUG_ON_HOT(!is_inet_addr(saddr) || !is_inet_addr(daddr));
+	BUG_ON_HOT(!is_inet_addr(saddr) ||
+	           (daddr->ss_family != AF_UNSPEC && !is_inet_addr(daddr)));
 
 	dgram->obj_type = OBJ_TYPE_DGRAM;
 	dgram->owner = owner;
