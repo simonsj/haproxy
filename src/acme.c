@@ -2215,16 +2215,6 @@ int acme_req_account(struct task *task, struct acme_ctx *ctx, int newaccount, ch
 		{ IST("Content-Type"), IST("application/jose+json") },
 		{ IST_NULL, IST_NULL }
 	};
-	char *accountreq = "{\n"
-		"    \"termsOfServiceAgreed\": true,\n"
-		"    \"onlyReturnExisting\":   true\n"
-		"}\n";
-	char *newaccountreq = "{\n"
-		"    \"termsOfServiceAgreed\": true,\n"
-		"    \"contact\": [\n"
-		"        \"mailto:%s\"\n"
-		"    ]\n"
-		"}\n";
 	int ret = 1;
 
         if ((req_in = alloc_trash_chunk()) == NULL)
@@ -2232,10 +2222,14 @@ int acme_req_account(struct task *task, struct acme_ctx *ctx, int newaccount, ch
         if ((req_out = alloc_trash_chunk()) == NULL)
 		goto error;
 
-	if (newaccount)
-		chunk_printf(req_in, newaccountreq, ctx->cfg->account.contact);
-	else
-		chunk_printf(req_in, "%s", accountreq);
+	if (newaccount) {
+		chunk_appendf(req_in, "{");
+		if (ctx->cfg->account.contact != NULL)
+			chunk_appendf(req_in, "\"contact\": [ \"mailto:%s\" ],", ctx->cfg->account.contact);
+		chunk_appendf(req_in, "\"termsOfServiceAgreed\": true");
+		chunk_appendf(req_in, "}");
+	} else
+		chunk_appendf(req_in, "{ \"onlyReturnExisting\": true }");
 
 	TRACE_DATA("newAccount Decoded", ACME_EV_REQ, ctx, &ctx->resources.newAccount, req_in);
 
