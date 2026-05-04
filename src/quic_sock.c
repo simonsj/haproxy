@@ -217,7 +217,7 @@ struct task *quic_lstnr_dghdlr(struct task *t, void *ctx, unsigned int state)
 	return t;
 }
 
-/* Retrieve the DCID from a QUIC datagram or packet at <pos> position,
+/* Retrieve the DCID from a QUIC datagram or packet at <start> position,
  * <end> being at one byte past the end of this datagram.
  * Returns 1 if succeeded, 0 if not.
  */
@@ -855,7 +855,7 @@ int qc_rcv_buf(struct quic_conn *qc)
 
 		b_add(&buf, ret);
 
-		TRACE_DEVEL("read datagram", QUIC_EV_CONN_RCV, qc, new_dgram);
+		TRACE_DEVEL("read datagram", QUIC_EV_CONN_RCV, qc);
 
 		if (!quic_get_dgram_dcid(dgram_buf, dgram_buf + ret, &dcid_off, &dcid_len))
 			continue;
@@ -873,6 +873,7 @@ int qc_rcv_buf(struct quic_conn *qc)
 		}
 
 		quic_dgram_init(new_dgram, dgram_buf, ret, NULL, dcid_off, dcid_len, &saddr, &daddr);
+		TRACE_DEVEL("datagram ready for parsing", QUIC_EV_CONN_RCV, qc, new_dgram);
 		quic_dgram_parse(new_dgram, qc, l ? &l->obj_type :
 		                 (qc->conn ? &__objt_server(qc->conn->target)->obj_type : NULL));
 	} while (ret > 0);
