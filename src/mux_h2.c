@@ -5469,6 +5469,8 @@ do_leave:
 
 	h2c->task = NULL;
 	h2c_error(h2c, H2_ERR_NO_ERROR);
+
+	/* here we don't have any h2c left, let's kill all h2c-less streams */
 	h2_wake_some_streams(h2c, 0);
 
 	if (br_data(h2c->mbuf)) {
@@ -5515,11 +5517,8 @@ do_leave:
 		HA_SPIN_UNLOCK(IDLE_CONNS_LOCK, &idle_conns[tid].idle_conns_lock);
 	}
 
-	/* either we can release everything now or it will be done later once
-	 * the last stream closes.
-	 */
-	if (eb_is_empty(&h2c->streams_by_id))
-		h2_release(h2c);
+	/* now we're done */
+	h2_release(h2c);
 
 	TRACE_LEAVE(H2_EV_H2C_WAKE);
 	return NULL;
