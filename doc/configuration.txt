@@ -30494,10 +30494,12 @@ More detailed documentation related to the operation, configuration and use
 of the filter can be found in the addons/ot directory.
 
 Note: The OpenTracing filter shouldn't be used for new designs as OpenTracing
-      itself is no longer maintained nor supported by its authors. A
-      replacement filter base on OpenTelemetry is currently under development
-      and is expected to be ready around HAProxy 3.2. As such OpenTracing will
-      be deprecated in 3.3 and removed in 3.5.
+      itself is no longer maintained nor supported by its authors. As such
+      OpenTracing will be deprecated in 3.3 and removed in 3.5. A replacement
+      filter based on OpenTelemetry is available since 3.4 with complete build
+      instructions currently at:
+
+          https://github.com/haproxytech/haproxy-opentelemetry/
 
 
 9.7. Bandwidth limitation
