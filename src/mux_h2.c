@@ -6287,6 +6287,9 @@ next_frame:
 	 * to convert 200 response to 101 htx response */
 	msgf |= (*flags & H2_SF_EXT_CONNECT_SENT) ? H2_MSGF_EXT_CONNECT: 0;
 
+	/* when dealing with trailers, we need to check the content-length */
+	msgf |= (*flags & H2_SF_DATA_CLEN) ? H2_MSGF_BODY_CL : 0;
+
 	if (*flags & H2_SF_HEADERS_RCVD)
 		goto trailers;
 
