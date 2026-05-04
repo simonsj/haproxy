@@ -219,6 +219,8 @@ ssize_t dns_recv_nameserver(struct dns_nameserver *ns, void *data, size_t size)
 
 	if (ns->dgram) {
 		struct dgram_conn *dgram = &ns->dgram->conn;
+		struct sockaddr_storage from = {0};
+		socklen_t fromlen = sizeof(from);
 		int fd;
 
 		HA_SPIN_LOCK(DNS_LOCK, &dgram->lock);
@@ -228,7 +230,7 @@ ssize_t dns_recv_nameserver(struct dns_nameserver *ns, void *data, size_t size)
 			return -1;
 		}
 
-		if ((ret = recv(fd, data, size, 0)) < 0) {
+		if ((ret = recvfrom(fd, data, size, 0, (struct sockaddr *)&from, &fromlen)) < 0) {
 			if (errno == EAGAIN || errno == EWOULDBLOCK) {
 				fd_cant_recv(fd);
 				HA_SPIN_UNLOCK(DNS_LOCK, &dgram->lock);
@@ -238,6 +240,12 @@ ssize_t dns_recv_nameserver(struct dns_nameserver *ns, void *data, size_t size)
 			dgram->t.sock.fd = -1;
 			HA_SPIN_UNLOCK(DNS_LOCK, &dgram->lock);
 			return -1;
+		}
+		if ((dgram->addr.to.ss_family == AF_INET || dgram->addr.to.ss_family == AF_INET6) &&
+		    ipcmp(&from, &dgram->addr.to, 1) != 0) {
+			/* reply from unexpected source -- silently discard */
+			fd_want_recv(fd);
+			ret = 0;
 		}
 		HA_SPIN_UNLOCK(DNS_LOCK, &dgram->lock);
 	}
