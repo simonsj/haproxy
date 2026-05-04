@@ -3417,7 +3417,6 @@ int check_action_do_resolve(struct act_rule *rule, struct proxy *px, char **err)
 void resolvers_setup_proxy(struct proxy *px)
 {
 	px->maxconn = 0;
-	px->conn_retries = 1;
 	px->conn_retries = 1; /* FIXME ignored since 91e785ed
 	                       * ("MINOR: stream: Rely on a per-stream max connection retries value")
 	                       * If this is really expected this should be set on the stream directly
