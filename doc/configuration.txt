@@ -32447,6 +32447,16 @@ account-key <filename>
 
     openssl ecparam -name secp384r1 -genkey -noout -out account.key
 
+acme-vars <string>
+  Pass arbitrary variables to the external DNS provisioning tool (e.g. the
+  dataplaneAPI) via the "dpapi" sink. The semantics are tool-specific; refer
+  to your DNS provisioning tool's documentation.
+
+  This keyword is only meaningful when the challenge type is "dns-01" or
+  "dns-persist-01".
+
+  See also: "challenge", "provider-name"
+
 bits <number>
   Configure the number of bits to generate an RSA certificate. Default to 2048.
   Setting a too high value can trigger a warning if your machine is not
@@ -32595,6 +32605,16 @@ profile <string>
   Example:
     # Request short-lived certificates
     profile shortlived
+
+provider-name <string>
+  Set the DNS provider name passed to the external DNS provisioning tool (e.g.
+  the dataplaneAPI) via the "dpapi" sink. The accepted values are
+  tool-specific; refer to your DNS provisioning tool's documentation.
+
+  This keyword is only meaningful when the challenge type is "dns-01" or
+  "dns-persist-01".
+
+  See also: "challenge", "acme-vars"
 
 reuse-key { on | off }
   If set to "on", HAProxy won't generate a new private key and will keep the
