@@ -60,7 +60,6 @@
 #   USE_OBSOLETE_LINKER     : use when the linker fails to emit __start_init/__stop_init
 #   USE_THREAD_DUMP         : use the more advanced thread state dump system. Automatic.
 #   USE_OT                  : enable the OpenTracing filter
-#   USE_OTEL                : enable the OpenTelemetry filter
 #   EXTRA_MAKE              : space-separated list of external addons using a Makefile.inc
 #   USE_MEMORY_PROFILING    : enable the memory profiler. Linux-glibc only.
 #   USE_LIBATOMIC           : force to link with/without libatomic. Automatic.
@@ -130,11 +129,6 @@
 #   OT_LIB         : force the lib path to libopentracing-c-wrapper
 #   OT_RUNPATH     : add RUNPATH for libopentracing-c-wrapper to haproxy executable
 #   OT_USE_VARS    : allows the use of variables for the OpenTracing context
-#   OTEL_DEBUG     : compile the OpenTelemetry filter in debug mode
-#   OTEL_INC       : force the include path to libopentelemetry-c-wrapper
-#   OTEL_LIB       : force the lib path to libopentelemetry-c-wrapper
-#   OTEL_RUNPATH   : add RUNPATH for libopentelemetry-c-wrapper to haproxy executable
-#   OTEL_USE_VARS  : allows the use of variables for the OpenTelemetry context
 #   IGNOREGIT      : ignore GIT commit versions if set.
 #   VERSION        : force haproxy version reporting.
 #   SUBVERS        : add a sub-version (eg: platform, model, ...).
@@ -354,7 +348,7 @@ use_opts = USE_EPOLL USE_KQUEUE USE_NETFILTER USE_POLL                        \
            USE_CPU_AFFINITY USE_TFO USE_NS USE_DL USE_RT USE_LIBATOMIC        \
            USE_MATH USE_DEVICEATLAS USE_51DEGREES                             \
            USE_WURFL USE_OBSOLETE_LINKER USE_PRCTL USE_PROCCTL                \
-           USE_THREAD_DUMP USE_EVPORTS USE_OT USE_OTEL USE_QUIC USE_PROMEX    \
+           USE_THREAD_DUMP USE_EVPORTS USE_OT USE_QUIC USE_PROMEX             \
            USE_MEMORY_PROFILING USE_SHM_OPEN                                  \
            USE_STATIC_PCRE USE_STATIC_PCRE2                                   \
            USE_PCRE USE_PCRE_JIT USE_PCRE2 USE_PCRE2_JIT                      \
@@ -871,10 +865,6 @@ ifneq ($(USE_OT:0=),)
   include addons/ot/Makefile
 endif
 
-ifneq ($(USE_OTEL:0=),)
-  include addons/otel/Makefile
-endif
-
 ifneq ($(EXTRA_MAKE),)
   include $(addsuffix /Makefile.inc,$(EXTRA_MAKE))
 endif
@@ -1187,7 +1177,6 @@ clean:
 	$(Q)rm -f addons/51degrees/*.[oas] addons/51degrees/dummy/*.[oas] addons/51degrees/dummy/*/*.[oas]
 	$(Q)rm -f addons/deviceatlas/*.[oas] addons/deviceatlas/dummy/*.[oas] addons/deviceatlas/dummy/*.o
 	$(Q)rm -f addons/deviceatlas/dummy/Os/*.o
-	$(Q)rm -f addons/otel/src/*.[oas]
 	$(Q)rm -f addons/ot/src/*.[oas]
 	$(Q)rm -f addons/wurfl/*.[oas] addons/wurfl/dummy/*.[oas]
 	$(Q)rm -f admin/*/*.[oas] admin/*/*/*.[oas]
