@@ -1695,7 +1695,7 @@ int http_wait_for_response(struct stream *s, struct channel *rep, int an_bit)
 				sess->flags |= SESS_FL_PREFER_LAST;
 				conn_set_private(srv_conn);
 				/* If it fail now, the same will be done in mux->detach() callback */
-				session_add_conn(srv_conn->owner, srv_conn);
+				session_add_conn(sess, srv_conn);
 				break;
 			}
 		}
