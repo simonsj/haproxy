@@ -415,7 +415,7 @@ static void tcpcheck_expect_onerror_message(struct buffer *msg, struct check *ch
 					    int match, struct ist info)
 {
 	struct sample *smp;
-	int is_empty;
+	int is_empty, check_type;
 
 	/* Follows these step to produce the info message:
 	 *     1. if info field is already provided, copy it
@@ -433,6 +433,7 @@ static void tcpcheck_expect_onerror_message(struct buffer *msg, struct check *ch
 		goto comment;
 	}
 
+	check_type = (check->tcpcheck->rs->flags & TCPCHK_RULES_PROTO_CHK);
 	is_empty = (IS_HTX_SC(check->sc) ? htx_is_empty(htxbuf(&check->bi)) : !b_data(&check->bi));
 	if (is_empty) {
 		TRACE_ERROR("empty response", CHK_EV_RX_DATA|CHK_EV_RX_ERR, check);
@@ -442,7 +443,7 @@ static void tcpcheck_expect_onerror_message(struct buffer *msg, struct check *ch
 	}
 
 	if (check->type == PR_O2_TCPCHK_CHK &&
-	    (check->tcpcheck->rs->flags & TCPCHK_RULES_PROTO_CHK) != TCPCHK_RULES_TCP_CHK) {
+	    check_type != TCPCHK_RULES_TCP_CHK && check_type !=TCPCHK_RULES_HTTP_CHK) {
 		goto comment;
 	}
 
@@ -479,6 +480,7 @@ static void tcpcheck_expect_onerror_message(struct buffer *msg, struct check *ch
 		break;
 	case TCPCHK_EXPECT_HTTP_HEADER:
 		chunk_appendf(msg, " (header pattern) at step %d", tcpcheck_get_step_id(check, rule));
+		break;
 	case TCPCHK_EXPECT_UNDEF:
 		/* Should never happen. */
 		return;
