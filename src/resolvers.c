@@ -864,7 +864,7 @@ static void resolv_check_response(struct resolv_resolution *res)
 			/* If not empty we try to match a server
 			 * in server state file tree with the same hostname
 			 */
-			if (!srvrq->named_servers) {
+			if (srvrq->named_servers) {
 				srv = NULL;
 
 				/* convert the key to lookup in lower case */
