@@ -2200,7 +2200,7 @@ static int smp_fetch_url32(const struct arg *args, struct sample *smp, const cha
 }
 
 /* This concatenates the source address with the 32-bit hash of the Host and
- * URL as returned by smp_fetch_base32(). The idea is to have per-source and
+ * URL as returned by smp_fetch_url32(). The idea is to have per-source and
  * per-url counters. The result is a binary block from 8 to 20 bytes depending
  * on the source address length. The URL hash is stored before the address so
  * that in environments where IPv6 is insignificant, truncating the output to
