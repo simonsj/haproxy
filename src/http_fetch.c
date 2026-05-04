@@ -447,8 +447,6 @@ static int smp_fetch_stver(const struct arg *args, struct sample *smp, const cha
 	smp->data.type = SMP_T_STR;
 	smp->data.u.str = *vsn;
 	return 1;
-
-	return 1;
 }
 
 /* 3. Check on Status Code. We manipulate integers here. */
