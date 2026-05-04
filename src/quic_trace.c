@@ -612,7 +612,7 @@ static void quic_trace(enum trace_level level, uint64_t mask, const struct trace
 		if (qc) {
 			addr_to_str(&qc->peer_addr, bufaddr, sizeof(bufaddr));
 			port_to_str(&qc->peer_addr, bufport, sizeof(bufport));
-			chunk_appendf(&trace_buf, " peer_addr=%s:%s ", bufaddr, bufport);
+			chunk_appendf(&trace_buf, " peer_addr=%s:%s", bufaddr, bufport);
 		}
 
 		if (dgram) {
@@ -623,15 +623,15 @@ static void quic_trace(enum trace_level level, uint64_t mask, const struct trace
 			if (saddr->ss_family == AF_INET || saddr->ss_family == AF_INET6) {
 				addr_to_str(saddr, bufaddr, sizeof(bufaddr));
 				port_to_str(saddr, bufport, sizeof(bufport));
-				chunk_appendf(&trace_buf, "saddr=%s:%s ", bufaddr, bufport);
+				chunk_appendf(&trace_buf, " saddr=%s:%s", bufaddr, bufport);
 
 				addr_to_str(daddr, bufaddr, sizeof(bufaddr));
 				port_to_str(daddr, bufport, sizeof(bufport));
-				chunk_appendf(&trace_buf, "daddr=%s:%s ", bufaddr, bufport);
+				chunk_appendf(&trace_buf, " daddr=%s:%s", bufaddr, bufport);
 			}
 			/* DCID */
 			for (i = 0; i < dgram->dcid_len; ++i)
-				chunk_appendf(&trace_buf, "%02x", dgram->buf[dgram->dcid_off + i]);
+				chunk_appendf(&trace_buf, " %02x", dgram->buf[dgram->dcid_off + i]);
 
 		}
 	}
