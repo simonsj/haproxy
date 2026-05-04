@@ -109,6 +109,40 @@ static inline int quic_increment_curr_handshake(struct listener *l)
 	return next;
 }
 
+/* Initializes <dst> sockaddr_storage from <src> union sockaddr_in46 type.
+ * Only unspec, IPv4 and IPv6 addresses are supported.
+ */
+static inline void in46un_to_addr(const union sockaddr_in46 *src,
+                                  struct sockaddr_storage *dst)
+{
+	struct sockaddr_in  *in;
+	struct sockaddr_in6 *in6;
+
+	switch (((struct sockaddr_storage *)src)->ss_family) {
+	case AF_UNSPEC:
+		memset(dst, 0, sizeof(*dst));
+		break;
+
+	case AF_INET:
+		in = (struct sockaddr_in *)dst;
+		in->sin_family = AF_INET;
+		in->sin_addr = src->in4.sin_addr;
+		in->sin_port = src->in4.sin_port;
+		break;
+
+	case AF_INET6:
+		in6 = (struct sockaddr_in6 *)dst;
+		in6->sin6_family = AF_INET6;
+		in6->sin6_addr = src->in6.sin6_addr;
+		in6->sin6_port = src->in6.sin6_port;
+		break;
+
+	default:
+		ABORT_NOW();
+		break;
+	}
+}
+
 #endif /* USE_QUIC */
 #endif /* _HAPROXY_QUIC_SOCK_H */
 

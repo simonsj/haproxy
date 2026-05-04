@@ -1868,9 +1868,12 @@ static struct quic_conn *quic_rx_pkt_retrieve_conn(struct quic_rx_packet *pkt,
 				pool_free(pool_head_quic_connection_id, conn_id);
 			}
 			else {
+				struct sockaddr_storage saddr, daddr;
+				in46un_to_addr(&pkt->saddr, &saddr);
+				in46un_to_addr(&dgram->daddr, &daddr);
+
 				qc = qc_new_conn(l, pkt, &token_odcid, NULL, conn_id,
-				                 (struct sockaddr_storage *)&dgram->daddr,
-				                 (struct sockaddr_storage *)&pkt->saddr);
+				                 &daddr, &saddr);
 				if (qc == NULL) {
 					quic_cid_delete(conn_id); /* Removes CID from global tree as it points to a NULL qc. */
 					pool_free(pool_head_quic_connection_id, conn_id);
