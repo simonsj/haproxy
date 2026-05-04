@@ -328,6 +328,7 @@ int aes_process(struct buffer *data, struct buffer *nonce, struct buffer *key, i
 	EVP_CIPHER_CTX *ctx = NULL;
 	int size;
 	int ret;
+	size_t blksize;
 
 	ctx = EVP_CIPHER_CTX_new();
 
@@ -374,6 +375,16 @@ int aes_process(struct buffer *data, struct buffer *nonce, struct buffer *key, i
 	/* Initialise IV and key */
 	if(!sample_conv_aes_init(decrypt, ctx, NULL, NULL, (unsigned char*)b_orig(key),
 	                         (unsigned char*)b_orig(nonce)))
+		goto err;
+
+	blksize = EVP_CIPHER_CTX_block_size(ctx);
+	/* https://docs.openssl.org/3.0/man3/EVP_EncryptInit/#notes
+	 * PKCS padding works by adding n padding bytes of value n to make the
+	 * total length of the encrypted data a multiple of the block size.
+	 * Padding is always added so if the data is already a multiple of the
+	 * block size n will equal the block size.
+	 */
+	if (!decrypt && blksize > 1 && (b_size(out) < (b_data(data) / blksize + 1) * blksize))
 		goto err;
 
 	if (aad && b_data(aad)) {
