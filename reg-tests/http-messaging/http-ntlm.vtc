@@ -1,0 +1,55 @@
+varnishtest "NTLM/Negotiate detection on reused H1 backend triggers NULL session deref"
+
+feature ignore_unknown_macro
+
+server s1 {
+    rxreq
+    txresp
+
+    rxreq
+    txresp
+
+    rxreq
+    txresp -status 401 -hdr "WWW-Authenticate: NTLM"
+
+    rxreq
+    txresp -status 401 -hdr "WWW-Authenticate: NTLM"
+} -start
+
+haproxy h1 -conf {
+    global
+        nbthread 1
+
+    defaults
+        mode http
+        option http-keep-alive
+        timeout connect "${HAPROXY_TEST_TIMEOUT-5s}"
+        timeout client  "${HAPROXY_TEST_TIMEOUT-5s}"
+        timeout server  "${HAPROXY_TEST_TIMEOUT-5s}"
+
+    frontend fe
+        bind "fd@${fe}"
+        default_backend be
+
+    backend be
+        http-reuse always
+        server srv ${s1_addr}:${s1_port}
+} -start
+
+client c1 -connect ${h1_fe_sock} {
+    txreq -url "/"
+    rxresp
+    expect resp.status == 200
+
+    txreq -url "/"
+    rxresp
+    expect resp.status == 200
+
+    txreq -url "/"
+    rxresp
+    expect resp.status == 401
+
+    txreq -url "/"
+    rxresp
+    expect resp.status == 401
+} -run
