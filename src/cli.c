@@ -3269,8 +3269,34 @@ int pcli_parse_request(struct stream *s, struct channel *req, char **errmsg, int
 	if (!(pcli->flags & PCLI_F_PAYLOAD)) {
 		/* look for the '@@' prefix and intercept it if found */
 		ret = pcli_find_bidir_prefix(s, req, &p, end, errmsg, next_pid);
-		if (ret != 0) // success or failure
+		if (ret < 0) /* error */
 			goto end;
+		if (ret > 0) {
+			/* @@<pid> matched: apply access-level downgrade before
+			 * forwarding to the worker. The worker sockpair listener
+			 * defaults to ACCESS_LVL_ADMIN, so without this a
+			 * user/operator-level master-CLI client would inherit
+			 * admin rights on the worker side.
+			 */
+			if (pcli_has_level(s, ACCESS_LVL_ADMIN)) {
+				/* admin already, no downgrade needed */
+			} else if (pcli_has_level(s, ACCESS_LVL_OPER)) {
+				const char *cmd = "operator -;";
+				if (!ci_insert(req, 0, cmd, strlen(cmd))) {
+					ret = -1;
+					goto end;
+				}
+				ret += strlen(cmd);
+			} else if (pcli_has_level(s, ACCESS_LVL_USER)) {
+				const char *cmd = "user -;";
+				if (!ci_insert(req, 0, cmd, strlen(cmd))) {
+					ret = -1;
+					goto end;
+				}
+				ret += strlen(cmd);
+			}
+			goto end;
+		}
 
 		reql = p - str;
 		p = str;
