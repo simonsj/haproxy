@@ -2420,7 +2420,7 @@ static struct sample_fetch_kw_list sample_fetch_keywords = {ILH, {
 	{ "url_ip",             smp_fetch_url_ip,             0,                NULL,    SMP_T_IPV4, SMP_USE_HRQHV },
 	{ "url_port",           smp_fetch_url_port,           0,                NULL,    SMP_T_SINT, SMP_USE_HRQHV },
 	{ "url_param",          smp_fetch_url_param,          ARG3(0,STR,STR,STR),  NULL,    SMP_T_STR,  SMP_USE_HRQHV },
-	{ "urlp"     ,          smp_fetch_url_param,          ARG3(0,STR,STR,STR),  NULL,    SMP_T_STR,  SMP_USE_HRQHV },
+	{ "urlp",               smp_fetch_url_param,          ARG3(0,STR,STR,STR),  NULL,    SMP_T_STR,  SMP_USE_HRQHV },
 	{ "urlp_val",           smp_fetch_url_param_val,      ARG3(0,STR,STR,STR),  NULL,    SMP_T_SINT, SMP_USE_HRQHV },
 
 	{ /* END */ },
