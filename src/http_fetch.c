@@ -1466,14 +1466,16 @@ static int smp_fetch_http_auth_bearer(const struct arg *args, struct sample *smp
 		if (http_find_header(htx, hdr_name, &ctx, 0)) {
 			struct ist type = istsplit(&ctx.value, ' ');
 
+			/* no space was found or the space is the first character or no "Bearer" method */
+			if (!istlen(type) || istlen(type) == istlen(ctx.value) || !isteqi(type, ist("Bearer")))
+				return 0;
+
 			/* There must be "at least" one space character between
 			 * the scheme and the following value so ctx.value might
 			 * still have leading spaces here (see RFC7235).
 			 */
 			ctx.value = istskip(ctx.value, ' ');
-
-			if (isteqi(type, ist("Bearer")) && istlen(ctx.value))
-				chunk_initlen(&bearer_val, istptr(ctx.value), 0, istlen(ctx.value));
+			chunk_initlen(&bearer_val, istptr(ctx.value), 0, istlen(ctx.value));
 		}
 	}
 	else {
