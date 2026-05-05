@@ -6285,7 +6285,10 @@ next_frame:
 	msgf = (h2c->dff & H2_F_HEADERS_END_STREAM) ? 0 : H2_MSGF_BODY;
 	msgf |= (*flags & H2_SF_BODY_TUNNEL) ? H2_MSGF_BODY_TUNNEL: 0;
 	/* If an Extended CONNECT has been sent on this stream, set message flag
-	 * to convert 200 response to 101 htx response */
+	 * to convert 200 response to 101 htx response. We only support this if
+	 * the connection supports RFC8441.
+	 */
+	msgf |= (h2c->flags & H2_CF_RCVD_RFC8441) ? H2_MSGF_EXT_CONN_OK : 0;
 	msgf |= (*flags & H2_SF_EXT_CONNECT_SENT) ? H2_MSGF_EXT_CONNECT: 0;
 
 	/* when dealing with trailers, we need to check the content-length */
