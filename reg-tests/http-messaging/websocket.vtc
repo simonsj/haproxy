@@ -177,7 +177,8 @@ client c3 -connect ${hap_fe2_sock} {
 client c4 -connect ${hap_fe3_sock} {
 	txpri
 	stream 0 {
-		txsettings
+		# manually send RFC8441 SETTINGS_ENABLE_CONNECT_PROTOCOL
+		sendhex "00 00 06 04   00    00 00 00 00    00 08   00 00 00 01"
 		rxsettings
 		txsettings -ack
 		rxsettings
@@ -205,7 +206,8 @@ client c4 -connect ${hap_fe3_sock} {
 client c5 -connect ${hap_fe4_sock} {
 	txpri
 	stream 0 {
-		txsettings
+		# manually send RFC8441 SETTINGS_ENABLE_CONNECT_PROTOCOL
+		sendhex "00 00 06 04   00    00 00 00 00    00 08   00 00 00 01"
 		rxsettings
 		txsettings -ack
 		rxsettings

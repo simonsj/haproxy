@@ -219,7 +219,8 @@ client c1_h1_h2 -connect ${hap_frt_h1_h2_sock} {
 client c2_h2 -connect ${hap_frt_h2_sock} {
 	txpri
 	stream 0 {
-		txsettings
+		# manually send RFC8441 SETTINGS_ENABLE_CONNECT_PROTOCOL
+		sendhex "00 00 06 04   00    00 00 00 00    00 08   00 00 00 01"
 		rxsettings
 		txsettings -ack
 		rxsettings
@@ -245,7 +246,8 @@ client c2_h2 -connect ${hap_frt_h2_sock} {
 client c3_h2_h1 -connect ${hap_frt_h2_h1_sock} {
 	txpri
 	stream 0 {
-		txsettings
+		# manually send RFC8441 SETTINGS_ENABLE_CONNECT_PROTOCOL
+		sendhex "00 00 06 04   00    00 00 00 00    00 08   00 00 00 01"
 		rxsettings
 		txsettings -ack
 		rxsettings
@@ -339,7 +341,8 @@ client c8_h2c -connect ${hap_frt_h1_h2c_sock} {
 client c9_h2c -connect ${hap_frt_h2_h1_sock} {
 	txpri
 	stream 0 {
-		txsettings
+		# manually send RFC8441 SETTINGS_ENABLE_CONNECT_PROTOCOL
+		sendhex "00 00 06 04   00    00 00 00 00    00 08   00 00 00 01"
 		rxsettings
 		txsettings -ack
 		rxsettings
