@@ -2935,7 +2935,8 @@ static int h2c_handle_settings(struct h2c *h2c)
 			}
 			break;
 		case H2_SETTINGS_ENABLE_CONNECT_PROTOCOL:
-			if (arg == 1)
+			/* setting only considered if rfc8441 not disabled */
+			if (arg == 1 && !(global.tune.options & GTUNE_DISABLE_H2_WEBSOCKET))
 				h2c->flags |= H2_CF_RCVD_RFC8441;
 			break;
 		}
