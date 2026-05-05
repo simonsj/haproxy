@@ -1047,12 +1047,9 @@ static struct task *process_hstream(struct task *t, void *context, unsigned int 
 			goto err;
 
 		/* TX part */
-		if (hstream_is_fastfwd_supported(hs)) {
+		if (hstream_is_fastfwd_supported(hs) || se_have_ff_data(hs->sc->sedesc)) {
 			if (!htx_is_empty(htxbuf(&hs->res)))
 				goto flush_res_buf;
-			if (!hs->to_write && !se_have_ff_data(hs->sc->sedesc))
-				goto out;
-
 			ret = hstream_ff_snd(conn, hs);
 			if (ret >= 0)
 				goto send_done;
