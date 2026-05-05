@@ -281,6 +281,7 @@ static int hstream_htx_buf_rcv(struct connection *conn, struct hstream *hs)
  end_recv:
 	if (cur_read) {
 		hs->req_body = ((hs->req_body < cur_read) ? 0 : hs->req_body - cur_read);
+		sc_ep_report_read_activity(hs->sc);
 	}
 
 	if (((conn->flags & CO_FL_ERROR) || sc_ep_test(hs->sc, SE_FL_ERROR))) {
@@ -879,6 +880,23 @@ static inline int hstream_sl_hdrs_htx_buf_snd(struct hstream *hs,
 	return ret;
 }
 
+/* Send an error to the client, if possible */
+static inline void hstream_send_error(struct hstream *hs, struct connection *conn, struct buffer *errmsg)
+{
+	/* Do nothing is the response headers were already sent */
+	if (hs->flags & HS_ST_HTTP_RESP_SL_SENT)
+		return;
+
+	if (!hstream_get_buf(hs, &hs->res)) {
+		TRACE_ERROR("could not allocate response buffer", HS_EV_HSTRM_RESP, hs);
+		return;
+	}
+
+	b_set_data(&hs->res, b_data(errmsg));
+	memcpy(b_orig(&hs->res), b_head(errmsg), b_data(errmsg));
+	hstream_htx_buf_snd(conn, hs);
+}
+
 /* Must be called before sending to determine if the body request must be
  * drained asap before sending. Return 1 if this is the case, 0 if not.
  * This is the case by default before sending the response except if
@@ -928,6 +946,16 @@ static struct task *process_hstream(struct task *t, void *context, unsigned int 
 	if (tick_isset(hs->res_time) && !tick_is_expired(hs->res_time, now_ms)) {
 		TRACE_STATE("waiting before responding", HS_EV_HSTRM_IO_CB, hs);
 		goto leave;
+	}
+	if (state & TASK_WOKEN_TIMER) {
+		int exp = (tick_isset(sc_ep_lra(hs->sc)) ? tick_add_ifset(sc_ep_lra(hs->sc), hs->sc->ioto) : TICK_ETERNITY);
+
+		if (tick_is_expired(exp, now_ms)) {
+			TRACE_ERROR("connection timed out", HS_EV_PROCESS_HSTRM, hs);
+			hs->flags |= HS_ST_CONN_ERROR;
+			hstream_send_error(hs, conn, &http_err_chunks[HTTP_ERR_408]);
+			goto out;
+		}
 	}
 
 	if (!(hs->flags & HS_ST_HTTP_GOT_HDRS)) {
@@ -1076,6 +1104,14 @@ static struct task *process_hstream(struct task *t, void *context, unsigned int 
 		task_destroy(t);
 		t = NULL;
 	}
+	else {
+		t->expire = (tick_is_expired(t->expire, now_ms) ? TICK_ETERNITY : t->expire);
+		if (!(hs->flags & HS_ST_HTTP_EOM_RCVD)) {
+			int exp = (tick_isset(sc_ep_lra(hs->sc)) ? tick_add_ifset(sc_ep_lra(hs->sc), hs->sc->ioto) : TICK_ETERNITY);
+
+			t->expire = tick_first(t->expire, exp);
+		}
+	}
 
  leave:
 	TRACE_LEAVE(HS_EV_PROCESS_HSTRM, hs);
@@ -1109,6 +1145,7 @@ void *hstream_new(struct session *sess, struct stconn *sc, struct buffer *input)
 	hs->obj_type = OBJ_TYPE_HATERM;
 	hs->sess = sess;
 	hs->sc = sc;
+	hs->sc->ioto = sess->fe->timeout.client;
 	hs->task = t;
 	hs->req = BUF_NULL;
 	hs->res = BUF_NULL;
