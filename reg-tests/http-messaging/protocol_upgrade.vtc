@@ -72,7 +72,7 @@ server srv_h2 {
 		txresp \
 		  -status 200
 	} -run
-} -repeat 2 -start
+} -repeat 4 -start
 
 # http2 server without support for RFC8441
 server srv_h2_no_ws {
@@ -239,6 +239,56 @@ client c2_h2 -connect ${hap_frt_h2_sock} {
 		rxwinup
 		rxhdrs
 		expect resp.status == 200
+	} -run
+} -run
+
+# connect to h2 server frontend without extension: must fail
+client c2_h2_rej1 -connect ${hap_frt_h2_sock} {
+	txpri
+	stream 0 {
+		# no extension sent
+		txsettings
+		rxsettings
+		txsettings -ack
+		rxsettings
+		expect settings.ack == true
+	} -run
+
+	stream 1 {
+		txreq \
+		  -req "CONNECT" \
+		  -scheme "http" \
+		  -url "/" \
+		  -hdr ":authority" "127.0.0.1" \
+		  -hdr ":protocol" "custom_protocol" \
+		  -nostrend
+
+		rxrst
+	} -run
+} -run
+
+# connect to h2 server with ext but :proto with bad method: must fail
+client c2_h2_rej2 -connect ${hap_frt_h2_sock} {
+	txpri
+	stream 0 {
+		# manually send RFC8441 SETTINGS_ENABLE_CONNECT_PROTOCOL
+		sendhex "00 00 06 04   00    00 00 00 00    00 08   00 00 00 01"
+		rxsettings
+		txsettings -ack
+		rxsettings
+		expect settings.ack == true
+	} -run
+
+	stream 1 {
+		txreq \
+		  -req "GET" \
+		  -scheme "http" \
+		  -url "/" \
+		  -hdr ":authority" "127.0.0.1" \
+		  -hdr ":protocol" "custom_protocol" \
+		  -nostrend
+
+		rxrst
 	} -run
 } -run
 

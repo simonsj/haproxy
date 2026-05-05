@@ -92,7 +92,7 @@ static struct htx_sl *h2_prepare_htx_reqline(uint32_t fields, struct ist *phdr, 
 	size_t i;
 
 	if ((fields & H2_PHDR_FND_METH) && isteq(phdr[H2_PHDR_IDX_METH], ist("CONNECT"))) {
-		if (fields & H2_PHDR_FND_PROT) {
+		if ((fields & H2_PHDR_FND_PROT) && (*msgf & H2_MSGF_EXT_CONN_OK)) {
 			/* rfc 8441 Extended Connect Protocol
 			 * #4 :scheme and :path must be present, as well as
 			 * :authority like all h2 requests
@@ -130,6 +130,11 @@ static struct htx_sl *h2_prepare_htx_reqline(uint32_t fields, struct ist *phdr, 
 			 * MUST be omitted ; ":authority" contains the host and port
 			 * to connect to.
 			 */
+			if (fields & H2_PHDR_FND_PROT) {
+				/* protocol not allowed without RFC8441 support */
+				goto fail;
+			}
+
 			if (fields & H2_PHDR_FND_SCHM) {
 				/* scheme not allowed */
 				goto fail;
@@ -148,11 +153,11 @@ static struct htx_sl *h2_prepare_htx_reqline(uint32_t fields, struct ist *phdr, 
 
 		*msgf |= H2_MSGF_BODY_TUNNEL;
 	}
-	else if ((fields & (H2_PHDR_FND_METH|H2_PHDR_FND_SCHM|H2_PHDR_FND_PATH)) !=
+	else if ((fields & (H2_PHDR_FND_METH|H2_PHDR_FND_SCHM|H2_PHDR_FND_PATH|H2_PHDR_FND_PROT)) !=
 	         (H2_PHDR_FND_METH|H2_PHDR_FND_SCHM|H2_PHDR_FND_PATH)) {
 		/* RFC 7540 #8.1.2.3 : all requests MUST include exactly one
 		 * valid value for the ":method", ":scheme" and ":path" phdr
-		 * unless it is a CONNECT request.
+		 * and no ":protocol" phdr unless it is a CONNECT request..
 		 */
 		if (!(fields & H2_PHDR_FND_METH)) {
 			/* missing method */
@@ -163,7 +168,7 @@ static struct htx_sl *h2_prepare_htx_reqline(uint32_t fields, struct ist *phdr, 
 			goto fail;
 		}
 		else {
-			/* missing path */
+			/* missing path or extra protocol */
 			goto fail;
 		}
 	}
