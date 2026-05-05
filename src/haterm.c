@@ -1029,8 +1029,10 @@ static struct task *process_hstream(struct task *t, void *context, unsigned int 
 		/* HTX RX part */
 		if (hstream_must_drain(hs)) {
 			rcvd = hstream_htx_buf_rcv(conn, hs);
-			if (rcvd == 3) {
-				TRACE_STATE("waiting for more data", HS_EV_HSTRM_RESP, hs);
+			if (rcvd != 1) {
+				if (rcvd == 2)
+					hstream_send_error(hs, conn, &http_err_chunks[HTTP_ERR_400]);
+				TRACE_STATE("waiting for more data or error", HS_EV_HSTRM_RESP, hs);
 				goto out;
 			}
 		}
