@@ -846,6 +846,7 @@ static size_t h1_parse_full_contig_chunks(struct h1m *h1m, struct htx **dsthtx,
 
   parsing_error:
 	(*dsthtx)->flags |= HTX_FL_PARSING_ERROR;
+	htx_remove_blk(*dsthtx, htxret.blk);
 	h1m->err_state = h1m->state;
 	h1m->err_pos = ofs + end + ridx - start;
 	return 0;
