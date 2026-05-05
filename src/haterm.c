@@ -267,7 +267,7 @@ static int hstream_htx_buf_rcv(struct connection *conn, struct hstream *hs)
 	while (sc_ep_test(hs->sc, SE_FL_RCV_MORE) ||
 	       (!(conn->flags & CO_FL_ERROR) && !sc_ep_test(hs->sc, SE_FL_ERROR | SE_FL_EOS))) {
 		htx_reset(htxbuf(&hs->req));
-		max = (IS_HTX_SC(hs->sc) ?  htx_free_space(htxbuf(&hs->req)) : b_room(&hs->req));
+		max = htx_free_space(htxbuf(&hs->req));
 		sc_ep_clr(hs->sc, SE_FL_WANT_ROOM);
 		read = CALL_MUX_WITH_RET(conn->mux, rcv_buf(hs->sc, &hs->req, max, 0));
 		cur_read += read;
