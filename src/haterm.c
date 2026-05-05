@@ -991,15 +991,6 @@ static struct task *process_hstream(struct task *t, void *context, unsigned int 
 		/* HTX send the start line and headers if not already sent */
 		if (!hstream_sl_hdrs_htx_buf_snd(hs, conn))
 			goto err;
-
-		if (hstream_must_drain(hs)) {
-			/* The request must be drained before sending the response (HS_ST_OPT_REQ_AFTER_RES not set).
-			 * The body will be drained upon next wakeup.
-			 */
-			TRACE_STATE("waking up task", HS_EV_HSTRM_IO_CB, hs);
-			task_wakeup(hs->task, TASK_WOKEN_IO);
-			goto out;
-		}
 	}
 	else {
 		struct buffer *buf;
