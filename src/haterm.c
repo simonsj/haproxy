@@ -143,8 +143,8 @@ static void hterm_trace(enum trace_level level, uint64_t mask, const struct trac
 
 	chunk_appendf(&trace_buf, " hs@%p ", hs);
 	if (hs) {
-		chunk_appendf(&trace_buf, " res=%u req=%u req_size=%llu to_write=%llu req_body=%llu",
-		              (unsigned int)b_data(&hs->res), (unsigned int)b_data(&hs->res),
+		chunk_appendf(&trace_buf, " flags=0x%04x res=%u req=%u req_size=%llu to_write=%llu req_body=%llu",
+		              hs->flags, (unsigned int)b_data(&hs->res), (unsigned int)b_data(&hs->res),
 		              hs->req_size, hs->to_write, hs->req_body);
 	}
 
