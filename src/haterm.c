@@ -523,7 +523,6 @@ static int hstream_build_http_100_continue_resp(struct hstream *hs)
 		goto err;
 	}
 
-	htx->flags |= HTX_FL_EOM;
 	htx_to_buf(htx, buf);
 	sl->info.res.status = 100;
 	ret = 1;
