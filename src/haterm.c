@@ -281,7 +281,9 @@ static int hstream_htx_buf_rcv(struct connection *conn, struct hstream *hs)
 	}
 
  end_recv:
-	hs->req_body -= cur_read;
+	if (cur_read) {
+		hs->req_body = ((hs->req_body < cur_read) ? 0 : hs->req_body - cur_read);
+	}
 
 	if (((conn->flags & CO_FL_ERROR) || sc_ep_test(hs->sc, SE_FL_ERROR))) {
 		hs->flags |= HS_ST_CONN_ERROR;
