@@ -143,9 +143,9 @@ static void hterm_trace(enum trace_level level, uint64_t mask, const struct trac
 
 	chunk_appendf(&trace_buf, " hs@%p ", hs);
 	if (hs) {
-		chunk_appendf(&trace_buf, " flags=0x%04x res=%u req=%u req_size=%llu to_write=%llu req_body=%llu",
+		chunk_appendf(&trace_buf, " flags=0x%04x res=%u req=%u req_size=%llu to_write=%llu",
 		              hs->flags, (unsigned int)b_data(&hs->res), (unsigned int)b_data(&hs->res),
-		              hs->req_size, hs->to_write, hs->req_body);
+		              hs->req_size, hs->to_write);
 	}
 
 }
@@ -279,10 +279,8 @@ static int hstream_htx_buf_rcv(struct connection *conn, struct hstream *hs)
 	}
 
  end_recv:
-	if (cur_read) {
-		hs->req_body = ((hs->req_body < cur_read) ? 0 : hs->req_body - cur_read);
+	if (cur_read)
 		sc_ep_report_read_activity(hs->sc);
-	}
 
 	if (((conn->flags & CO_FL_ERROR) || sc_ep_test(hs->sc, SE_FL_ERROR))) {
 		hs->flags |= HS_ST_CONN_ERROR;
@@ -961,7 +959,7 @@ static struct task *process_hstream(struct task *t, void *context, unsigned int 
 	if (!(hs->flags & HS_ST_HTTP_GOT_HDRS)) {
 		struct htx *htx = htx_from_buf(&hs->req);
 		struct htx_sl *sl = http_get_stline(htx);
-		struct http_hdr_ctx expect, clength;
+		struct http_hdr_ctx expect;
 
 		/* we're starting to work with this endpoint, let's flag it */
 		if (unlikely(!sc_ep_test(hs->sc, SE_FL_APP_STARTED)))
@@ -975,18 +973,6 @@ static struct task *process_hstream(struct task *t, void *context, unsigned int 
 		uri = htx_sl_req_uri(http_get_stline(htx));
 		hstream_parse_uri(uri, hs);
 
-		clength.blk = NULL;
-		if (http_find_header(htx, ist("content-length"), &clength, 0)) {
-			if (isttest(clength.value)) {
-				if (strl2llrc(istptr(clength.value), istlen(clength.value),
-				              (long long *)&hs->req_body) != 0) {
-					TRACE_ERROR("could not parse the content length",
-					            HS_EV_PROCESS_HSTRM, hs);
-					goto err;
-				}
-			}
-		}
-
 		expect.blk = NULL;
 		if (http_find_header(htx, ist("expect"), &expect, 0)) {
 			hs->flags |= HS_ST_HTTP_EXPECT;
@@ -997,7 +983,6 @@ static struct task *process_hstream(struct task *t, void *context, unsigned int 
 		if (!htx_expect_more(htxbuf(&hs->req))) {
 			/* The request body has always been fully received */
 			TRACE_STATE("no more expected data", HS_EV_HSTRM_RESP, hs);
-			hs->req_body = 0;
 			hs->flags |= HS_ST_HTTP_EOM_RCVD;
 		}
 
@@ -1155,7 +1140,6 @@ void *hstream_new(struct session *sess, struct stconn *sc, struct buffer *input)
 
 	hs->ka = 0;
 	hs->req_size = 0;
-	hs->req_body = 0;
 	hs->req_code = 200;
 	hs->res_wait = TICK_ETERNITY;
 	hs->res_time = TICK_ETERNITY;

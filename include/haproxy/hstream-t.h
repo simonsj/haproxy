@@ -22,7 +22,6 @@ struct hstream {
 
 	int ka;                      /* .0: keep-alive  .1: forced  .2: http/1.1, .3: was_reused */
 	unsigned long long req_size; /* values passed in the URI to override the server's */
-	unsigned long long req_body; /* remaining body to be consumed from the request */
 	int req_code;
 	int res_wait;                /* time to wait before replying in ms */
 	int res_time;
