@@ -331,6 +331,7 @@ static inline struct ist h2_phdr_to_ist(int phdr)
 	case H2_PHDR_IDX_SCHM: return ist(":scheme");
 	case H2_PHDR_IDX_STAT: return ist(":status");
 	case H2_PHDR_IDX_HOST: return ist("Host");
+	case H2_PHDR_IDX_PROT: return ist(":protocol");
 	default:               return ist(":UNKNOWN");
 	}
 }
