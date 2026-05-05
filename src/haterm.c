@@ -290,7 +290,7 @@ static int hstream_htx_buf_rcv(struct connection *conn, struct hstream *hs)
 		TRACE_ERROR("connection error during recv", HS_EV_HSTRM_RECV, hs);
 		goto stop;
 	}
-	else if (!read && !fin && !sc_ep_test(hs->sc, SE_FL_ERROR | SE_FL_EOS)) {
+	else if (!fin && !sc_ep_test(hs->sc, SE_FL_ERROR | SE_FL_EOS)) {
 		TRACE_DEVEL("subscribing for read data", HS_EV_HSTRM_RECV, hs);
 		conn->mux->subscribe(hs->sc, SUB_RETRY_RECV, &hs->sc->wait_event);
 		goto wait_more_data;
