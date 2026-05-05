@@ -238,7 +238,6 @@ static int hstream_htx_buf_rcv(struct connection *conn, struct hstream *hs)
 	int ret = 0;
 	struct buffer *buf;
 	size_t max, read = 0, cur_read = 0;
-	int is_empty;
 	int fin = 0;
 
 	TRACE_ENTER(HS_EV_HSTRM_RECV, hs);
@@ -282,15 +281,10 @@ static int hstream_htx_buf_rcv(struct connection *conn, struct hstream *hs)
 	}
 
  end_recv:
-	is_empty = (IS_HTX_SC(hs->sc) ? htx_is_empty(htxbuf(&hs->req)) : !b_data(&hs->req));
 	hs->req_body -= cur_read;
 
-	if (is_empty && ((conn->flags & CO_FL_ERROR) || sc_ep_test(hs->sc, SE_FL_ERROR))) {
-		/* Report network errors only if we got no other data. Otherwise
-		 * we'll let the upper layers decide whether the response is OK
-		 * or not. It is very common that an RST sent by the server is
-		 * reported as an error just after the last data chunk.
-		 */
+	if (((conn->flags & CO_FL_ERROR) || sc_ep_test(hs->sc, SE_FL_ERROR))) {
+		hs->flags |= HS_ST_CONN_ERROR;
 		TRACE_ERROR("connection error during recv", HS_EV_HSTRM_RECV, hs);
 		goto stop;
 	}
