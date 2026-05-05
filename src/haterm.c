@@ -35,6 +35,8 @@ DECLARE_TYPED_POOL(pool_head_hstream, "hstream", struct hstream);
 #define HS_ST_OPT_RANDOM_RES    0x0200 /* random response (?R=1) */
 #define HS_ST_OPT_NO_CACHE      0x0400 /* non-cacheable response (?c=0) */
 #define HS_ST_OPT_NO_SPLICING   0x0800 /* no splicing (?S=1) */
+#define HS_ST_HTTP_EOM_RCVD     0x1000 /* EOM received */
+#define HS_ST_HTTP_EOM_SENT     0x2000 /* EOM sent */
 
 const char *HTTP_HELP =
 	"HAProxy's dummy HTTP server for benchmarks - version " HAPROXY_VERSION ".\n"
@@ -219,16 +221,11 @@ struct task *sc_hstream_io_cb(struct task *t, void *ctx, unsigned int state)
 		task_wakeup(hs->task, TASK_WOKEN_IO);
 	}
 
-	if (((!(hs->flags & HS_ST_OPT_REQ_AFTER_RES) || !hs->to_write) && hs->req_body) ||
-	    !htx_is_empty(htxbuf(&hs->req))) {
+	if ((hs->flags & (HS_ST_HTTP_EOM_SENT|HS_ST_HTTP_EOM_RCVD)) != (HS_ST_HTTP_EOM_SENT|HS_ST_HTTP_EOM_RCVD) ||
+	    !htx_is_empty(htxbuf(&hs->req)) || !htx_is_empty(htxbuf(&hs->res))) {
 		TRACE_STATE("waking up task", HS_EV_HSTRM_IO_CB, hs);
 		task_wakeup(hs->task, TASK_WOKEN_IO);
 	}
-	else if (hs->to_write || !htx_is_empty(htxbuf(&hs->res))) {
-		TRACE_STATE("waking up task", HS_EV_HSTRM_IO_CB, hs);
-		task_wakeup(hs->task, TASK_WOKEN_IO);
-	}
-
 	TRACE_LEAVE(HS_EV_HSTRM_IO_CB, hs);
 	return t;
 }
@@ -273,6 +270,7 @@ static int hstream_htx_buf_rcv(struct connection *conn, struct hstream *hs)
 		cur_read += read;
 		if (!htx_expect_more(htxbuf(&hs->req))) {
 		    fin = 1;
+		    hs->flags |= HS_ST_HTTP_EOM_RCVD;
 		    break;
 		}
 
@@ -354,14 +352,18 @@ static int hstream_ff_snd(struct connection *conn, struct hstream *hs)
 			sd->iobuf.pipe->data += ret;
 			hs->to_write -= ret;
 		}
-		if (!hs->to_write)
+		if (!hs->to_write) {
 			sd->iobuf.flags |= IOBUF_FL_EOI;
+			hs->flags |= HS_ST_HTTP_EOM_SENT;
+		}
 		goto done;
 	}
 #endif
 	hs->to_write -= hstream_add_ff_data(hs, sd, len);
-	if (!hs->to_write)
+	if (!hs->to_write) {
 		sd->iobuf.flags |= IOBUF_FL_EOI;
+		hs->flags |= HS_ST_HTTP_EOM_SENT;
+	}
 
   done:
 	if (se_done_ff(sd) != 0 || !(sd->iobuf.flags & (IOBUF_FL_FF_BLOCKED|IOBUF_FL_FF_WANT_ROOM))) {
@@ -373,7 +375,7 @@ static int hstream_ff_snd(struct connection *conn, struct hstream *hs)
 		TRACE_DEVEL("data not fully sent, wait", HS_EV_HSTRM_SEND, hs);
 		conn->mux->subscribe(hs->sc, SUB_RETRY_SEND, &hs->sc->wait_event);
 	}
-	else if (hs->to_write) {
+	else if (!(hs->flags & HS_ST_HTTP_EOM_SENT)) {
 		TRACE_STATE("waking up task", HS_EV_HSTRM_IO_CB, hs);
 		task_wakeup(hs->task, TASK_WOKEN_IO);
 	}
@@ -412,13 +414,13 @@ static int hstream_htx_buf_snd(struct connection *conn, struct hstream *hs)
 
 	/* The HTX data are not fully sent if the last HTX data
 	 * were not fully transferred or if there are remaining data
-	 * to send (->to_write > 0).
+	 * to send (HS_ST_HTTP_EOM_SENT flag set).
 	 */
 	if (!htx_is_empty(htxbuf(&hs->res))) {
 		TRACE_DEVEL("data not fully sent, wait", HS_EV_HSTRM_SEND, hs);
 		conn->mux->subscribe(sc, SUB_RETRY_SEND, &sc->wait_event);
 	}
-	else if (hs->to_write) {
+	else if (!(hs->flags & HS_ST_HTTP_EOM_SENT)) {
 		TRACE_STATE("waking up task", HS_EV_HSTRM_IO_CB, hs);
 		task_wakeup(hs->task, TASK_WOKEN_IO);
 	}
@@ -478,6 +480,7 @@ static int hstream_build_http_help_resp(struct hstream *hs)
 	}
 
 	htx->flags |= HTX_FL_EOM;
+	hs->flags |= HS_ST_HTTP_EOM_SENT;
 	htx_to_buf(htx, buf);
 	sl->info.res.status = 200;
 	ret = 1;
@@ -721,8 +724,10 @@ static int hstream_build_http_resp(struct hstream *hs)
 
 	if (hs->to_write > 0)
 		hs->to_write -= hstream_add_htx_data(hs, htx, hs->to_write);
-	if (hs->to_write <= 0)
+	if (hs->to_write <= 0) {
 		htx->flags |= HTX_FL_EOM;
+		hs->flags |= HS_ST_HTTP_EOM_SENT;
+	}
 	htx_to_buf(htx, buf);
 
 	sl->info.res.status = hs->req_code;
@@ -878,18 +883,18 @@ static inline int hstream_sl_hdrs_htx_buf_snd(struct hstream *hs,
  * drained asap before sending. Return 1 if this is the case, 0 if not.
  * This is the case by default before sending the response except if
  * the contrary has been asked with flag HS_ST_OPT_REQ_AFTER_RES.
- * Return true if the body request has not been fully drained (->hs->req_body>0)
- * and if the response has been sent (hs->to_write=0 &&
- * htx_is_empty(htxbuf(&hs->res) or if it must not be drained after having
- * sent the response (HS_ST_OPT_REQ_AFTER_RES not set) or
+ * Return 1 if there is not error and the request was not fully drained
+ * (HS_ST_HTTP_EOM_RCVD flag not set) and if it must not be drained after
+ * having sent the response (HS_ST_OPT_REQ_AFTER_RES not set) or the response
+ * was sent (HS_ST_HTTP_EOM_SENT flag set)
  */
 static inline int hstream_must_drain(struct hstream *hs)
 {
 	int ret;
 
 	TRACE_ENTER(HS_EV_PROCESS_HSTRM, hs);
-	ret = !(hs->flags & HS_ST_CONN_ERROR) && hs->req_body > 0 &&
-		((!hs->to_write && htx_is_empty(htxbuf(&hs->res))) || !(hs->flags & HS_ST_OPT_REQ_AFTER_RES));
+	ret = !(hs->flags & HS_ST_CONN_ERROR) && !(hs->flags & HS_ST_HTTP_EOM_RCVD) &&
+		(!(hs->flags & HS_ST_OPT_REQ_AFTER_RES) || (hs->flags & HS_ST_HTTP_EOM_SENT));
 	TRACE_LEAVE(HS_EV_PROCESS_HSTRM, hs);
 
 	return ret;
@@ -965,6 +970,7 @@ static struct task *process_hstream(struct task *t, void *context, unsigned int 
 			/* The request body has always been fully received */
 			TRACE_STATE("no more expected data", HS_EV_HSTRM_RESP, hs);
 			hs->req_body = 0;
+			hs->flags |= HS_ST_HTTP_EOM_RCVD;
 		}
 
 		if (hstream_must_drain(hs)) {
@@ -1025,7 +1031,7 @@ static struct task *process_hstream(struct task *t, void *context, unsigned int 
 			/* fallback to regular send */
 		}
 
-		if (!hs->to_write && htx_is_empty(htxbuf(&hs->res)))
+		if ((hs->flags & HS_ST_HTTP_EOM_SENT) && htx_is_empty(htxbuf(&hs->res)))
 			goto out;
 
 		buf = hstream_get_buf(hs, &hs->res);
@@ -1037,32 +1043,33 @@ static struct task *process_hstream(struct task *t, void *context, unsigned int 
 		htx = htx_from_buf(buf);
 		if (hs->to_write > 0)
 			hs->to_write -= hstream_add_htx_data(hs, htx, hs->to_write);
-		if (hs->to_write <= 0)
+		if (hs->to_write <= 0) {
 			htx->flags |= HTX_FL_EOM;
+			hs->flags |= HS_ST_HTTP_EOM_SENT;
+		}
 		htx_to_buf(htx, &hs->res);
 
  flush_res_buf:
 		hstream_htx_buf_snd(conn, hs);
+	}
 
  send_done:
-		if (hs->req_body && (hs->flags & HS_ST_OPT_REQ_AFTER_RES) && !hs->to_write) {
-			/* Response sending has just completed. The body will be drained upon
-			 * next wakeup.
-			 */
-			TRACE_STATE("waking up task", HS_EV_HSTRM_IO_CB, hs);
-			task_wakeup(hs->task, TASK_WOKEN_IO);
-			goto out;
-		}
+	if ((hs->flags & (HS_ST_HTTP_EOM_SENT|HS_ST_HTTP_EOM_RCVD|HS_ST_OPT_REQ_AFTER_RES)) == (HS_ST_HTTP_EOM_SENT|HS_ST_OPT_REQ_AFTER_RES)) {
+		/* Response sending has just completed. The body will be drained upon
+		 * next wakeup.
+		 */
+		TRACE_STATE("waking up task", HS_EV_HSTRM_IO_CB, hs);
+		task_wakeup(hs->task, TASK_WOKEN_IO);
+		goto out;
 	}
 
  out:
-	if (!hs->to_write && !hs->req_body && htx_is_empty(htxbuf(&hs->res)) && !se_have_ff_data(hs->sc->sedesc)) {
-		TRACE_DEVEL("shutting down stream", HS_EV_HSTRM_SEND, hs);
-		CALL_MUX_NO_RET(conn->mux, shut(hs->sc, SE_SHW_SILENT|SE_SHW_NORMAL, NULL));
-	}
-
 	if (hs->flags & HS_ST_CONN_ERROR ||
-	    (!hs->to_write && !hs->req_body && htx_is_empty(htxbuf(&hs->res)))) {
+	    ((hs->flags & (HS_ST_HTTP_EOM_SENT|HS_ST_HTTP_EOM_RCVD)) == (HS_ST_HTTP_EOM_SENT|HS_ST_HTTP_EOM_RCVD) &&
+	     htx_is_empty(htxbuf(&hs->res)) && !se_have_ff_data(hs->sc->sedesc))) {
+		TRACE_DEVEL("shutting down stream", HS_EV_HSTRM_SEND, hs);
+		se_shutdown(hs->sc->sedesc,SE_SHW_SILENT|SE_SHW_NORMAL);
+
 		TRACE_STATE("releasing hstream", HS_EV_PROCESS_HSTRM, hs);
 		hstream_free(hs);
 		hs = NULL;
